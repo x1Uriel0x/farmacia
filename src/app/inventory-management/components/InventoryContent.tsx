@@ -1,0 +1,235 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { Plus, AlertTriangle, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { productos as initialProductos, categorias, type Producto } from './inventoryData';
+import InventoryTable from './InventoryTable';
+import ProductModal from './ProductModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
+
+export default function InventoryContent() {
+  const [productosList, setProductosList] = useState<Producto[]>(initialProductos);
+  const [search, setSearch] = useState('');
+  const [selectedCategoria, setSelectedCategoria] = useState('Todas');
+  const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Producto | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const bajoStock = productosList.filter((p) => p.status === 'bajo-stock').length;
+  const porVencer = productosList.filter((p) => p.status === 'por-vencer').length;
+  const agotados = productosList.filter((p) => p.status === 'agotado').length;
+
+  const filtered = useMemo(() => {
+    return productosList.filter((p) => {
+      const matchSearch =
+        search === '' ||
+        p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(search.toLowerCase()) ||
+        p.laboratorio.toLowerCase().includes(search.toLowerCase());
+      const matchCategoria = selectedCategoria === 'Todas' || p.categoria === selectedCategoria;
+      const matchStatus = selectedStatus === 'Todos' || p.status === selectedStatus;
+      return matchSearch && matchCategoria && matchStatus;
+    });
+  }, [productosList, search, selectedCategoria, selectedStatus]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleEdit = (product: Producto) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (product: Producto) => {
+    setDeleteTarget(product);
+  };
+
+  const handleSave = (data: Omit<Producto, 'id'>) => {
+    if (editingProduct) {
+      setProductosList((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? { ...data, id: editingProduct.id } : p))
+      );
+      toast.success(`Producto "${data.nombre}" actualizado correctamente`);
+    } else {
+      const newId = `prod-${String(productosList.length + 1).padStart(3, '0')}`;
+      setProductosList((prev) => [...prev, { ...data, id: newId }]);
+      toast.success(`Producto "${data.nombre}" registrado en inventario`);
+    }
+    setIsModalOpen(false);
+    setEditingProduct(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    setProductosList((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    toast.success(`"${deleteTarget.nombre}" eliminado del inventario`);
+    setDeleteTarget(null);
+  };
+
+  const handleBulkDelete = () => {
+    setProductosList((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+    toast.success(`${selectedIds.size} producto(s) eliminados del inventario`);
+    setSelectedIds(new Set());
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === paginated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginated.map((p) => p.id)));
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Gestión de Inventario</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {productosList.length} productos registrados · Actualizado hace 2 min
+          </p>
+        </div>
+        <button
+          onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
+          className="btn-primary flex items-center gap-2 self-start sm:self-auto"
+        >
+          <Plus size={16} />
+          Registrar Producto
+        </button>
+      </div>
+
+      {/* Alert banners */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {bajoStock > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-bg border border-warning/30">
+            <AlertTriangle size={16} className="text-warning flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-warning">{bajoStock} Bajo Stock</p>
+              <p className="text-xs text-warning/80">Requieren reorden urgente</p>
+            </div>
+          </div>
+        )}
+        {porVencer > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/10 border border-accent/30">
+            <Clock size={16} className="text-accent flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-accent">{porVencer} Por Vencer</p>
+              <p className="text-xs text-accent/80">Vencen en menos de 30 días</p>
+            </div>
+          </div>
+        )}
+        {agotados > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-danger-bg border border-danger/30">
+            <AlertTriangle size={16} className="text-danger flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-danger">{agotados} Agotados</p>
+              <p className="text-xs text-danger/80">Sin stock disponible</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="card p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1116.65 2a7.5 7.5 0 010 14.65z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, SKU o laboratorio..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="input-field pl-9"
+            />
+          </div>
+          <select
+            value={selectedCategoria}
+            onChange={(e) => { setSelectedCategoria(e.target.value); setCurrentPage(1); }}
+            className="input-field sm:w-52"
+          >
+            {categorias.map((c) => (
+              <option key={`cat-opt-${c}`} value={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={selectedStatus}
+            onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+            className="input-field sm:w-44"
+          >
+            {['Todos', 'disponible', 'bajo-stock', 'agotado', 'por-vencer', 'descontinuado'].map((s) => (
+              <option key={`status-opt-${s}`} value={s}>
+                {s === 'Todos' ? 'Todos los estados' : s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' ')}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border border-primary/20 rounded-lg slide-up">
+          <span className="text-sm font-medium text-primary">
+            {selectedIds.size} producto(s) seleccionado(s)
+          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSelectedIds(new Set())} className="btn-secondary text-xs py-1.5 px-3">
+              Deseleccionar
+            </button>
+            <button onClick={handleBulkDelete} className="btn-danger text-xs py-1.5 px-3">
+              Eliminar seleccionados
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
+      <InventoryTable
+        productos={paginated}
+        allSelected={selectedIds.size === paginated.length && paginated.length > 0}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onSelectAll={handleSelectAll}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        totalItems={filtered.length}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}
+      />
+
+      {/* Modals */}
+      <ProductModal
+        open={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingProduct(null); }}
+        product={editingProduct}
+        onSave={handleSave}
+      />
+
+      <DeleteConfirmModal
+        open={deleteTarget !== null}
+        productName={deleteTarget?.nombre ?? ''}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
+    </div>
+  );
+}
