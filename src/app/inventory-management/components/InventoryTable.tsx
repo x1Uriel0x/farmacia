@@ -126,9 +126,9 @@ export default function InventoryTable({
             ) : (
               sorted.map((p) => (
                 <tr
-                  key={p.id}
-                  className={`table-row ${selectedIds.has(p.id) ? 'bg-primary/5' : ''}`}
-                >
+                key={p.id}
+                  className={`group table-row ${selectedIds.has(p.id) ? 'bg-primary/5' : ''}`}
+                  >  
                   <td className="table-cell w-10">
                     <input
                       type="checkbox"

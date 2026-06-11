@@ -21,6 +21,10 @@ const data = [
   { dia: 'Dom 17', ventas: 1848 },
 ];
 
+const chartColor = '#0f9b8e';
+const gridColor = '#dbe6ef';
+const axisColor = '#526b88';
+
 interface TooltipProps {
   active?: boolean;
   payload?: { value: number }[];
@@ -45,19 +49,19 @@ export default function SalesAreaChart() {
       <AreaChart data={data} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
         <defs>
           <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.25} />
-            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+            <stop offset="5%" stopColor={chartColor} stopOpacity={0.25} />
+            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="dia"
-          tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+          tick={{ fontSize: 11, fill: axisColor }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+          tick={{ fontSize: 11, fill: axisColor }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v) => `$${v}`}
@@ -66,11 +70,11 @@ export default function SalesAreaChart() {
         <Area
           type="monotone"
           dataKey="ventas"
-          stroke="var(--primary)"
+          stroke={chartColor}
           strokeWidth={2}
           fill="url(#salesGradient)"
-          dot={{ r: 3, fill: 'var(--primary)', strokeWidth: 0 }}
-          activeDot={{ r: 5, fill: 'var(--primary)' }}
+          dot={{ r: 3, fill: chartColor, strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: chartColor, stroke: '#ffffff', strokeWidth: 2 }}
         />
       </AreaChart>
     </ResponsiveContainer>

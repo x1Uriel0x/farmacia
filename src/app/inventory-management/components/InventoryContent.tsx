@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, AlertTriangle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { productos as initialProductos, categorias, type Producto } from './inventoryData';
+import { categorias, type Producto } from './inventoryData';
 import InventoryTable from './InventoryTable';
 import ProductModal from './ProductModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 export default function InventoryContent() {
-  const [productosList, setProductosList] = useState<Producto[]>(initialProductos);
+  const [productosList, setProductosList] = useState<Producto[]>([]);
   const [search, setSearch] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('Todas');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -24,6 +24,33 @@ export default function InventoryContent() {
   const porVencer = productosList.filter((p) => p.status === 'por-vencer').length;
   const agotados = productosList.filter((p) => p.status === 'agotado').length;
 
+const cargarProductos = async () => {
+  try {
+    const response = await fetch(
+      'http://localhost/farmacia-api/productos.php'
+    );
+
+    const data = await response.json();
+
+    const productosFormateados = data.map((p: any) => ({
+      ...p,
+      precioCompra: Number(p.precioCompra),
+      precioVenta: Number(p.precioVenta),
+      stockActual: Number(p.stockActual),
+      stockMinimo: Number(p.stockMinimo),
+      controlado: Boolean(Number(p.controlado))
+    }));
+
+    setProductosList(productosFormateados);
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Error al cargar productos');
+  }
+};
+useEffect(() => {
+  cargarProductos();
+}, []);
   const filtered = useMemo(() => {
     return productosList.filter((p) => {
       const matchSearch =
@@ -49,27 +76,110 @@ export default function InventoryContent() {
     setDeleteTarget(product);
   };
 
-  const handleSave = (data: Omit<Producto, 'id'>) => {
+ const handleSave = async (data: Omit<Producto, 'id'>) => {
+
+  try {
+
+    let response;
+
     if (editingProduct) {
-      setProductosList((prev) =>
-        prev.map((p) => (p.id === editingProduct.id ? { ...data, id: editingProduct.id } : p))
+
+      response = await fetch(
+        'http://localhost/farmacia-api/editar_producto.php',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: editingProduct.id,
+            ...data
+          })
+        }
       );
-      toast.success(`Producto "${data.nombre}" actualizado correctamente`);
+
     } else {
-      const newId = `prod-${String(productosList.length + 1).padStart(3, '0')}`;
-      setProductosList((prev) => [...prev, { ...data, id: newId }]);
-      toast.success(`Producto "${data.nombre}" registrado en inventario`);
+
+      response = await fetch(
+        'http://localhost/farmacia-api/crear_producto.php',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        }
+      );
+
     }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      toast.error('Error al guardar producto');
+      return;
+    }
+
+    toast.success(
+      editingProduct
+        ? `Producto "${data.nombre}" actualizado correctamente`
+        : `Producto "${data.nombre}" registrado correctamente`
+    );
+
+    cargarProductos();
+
     setIsModalOpen(false);
     setEditingProduct(null);
-  };
 
-  const handleConfirmDelete = () => {
-    if (!deleteTarget) return;
-    setProductosList((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    toast.success(`"${deleteTarget.nombre}" eliminado del inventario`);
+  } catch (error) {
+
+    console.error(error);
+    toast.error('Error de conexión con el servidor');
+
+  }
+
+};
+
+  const handleConfirmDelete = async () => {
+
+  if (!deleteTarget) return;
+
+  try {
+
+    const response = await fetch(
+      'http://localhost/farmacia-api/eliminar_producto.php',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: deleteTarget.id
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!result.success) {
+      toast.error('Error al eliminar producto');
+      return;
+    }
+
+    toast.success(`"${deleteTarget.nombre}" eliminado correctamente`);
+
+    cargarProductos();
+
     setDeleteTarget(null);
-  };
+
+  } catch (error) {
+
+    console.error(error);
+    toast.error('Error de conexión');
+
+  }
+
+};
 
   const handleBulkDelete = () => {
     setProductosList((prev) => prev.filter((p) => !selectedIds.has(p.id)));

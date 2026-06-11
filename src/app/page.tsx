@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
 import AppLayout from '../components/AppLayout';
 import DashboardMetrics from './components/DashboardMetrics';
 import DashboardAlerts from './components/DashboardAlerts';
@@ -6,6 +8,17 @@ import DashboardCharts from './components/DashboardCharts';
 import DashboardActivity from './components/DashboardActivity';
 
 export default function DashboardPage() {
+  
+  useEffect(() => {
+
+    const usuario = localStorage.getItem('usuario');
+
+    if (!usuario) {
+      window.location.href = '/sign-up-login-screen';
+    }
+
+  }, []);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -39,4 +52,6 @@ export default function DashboardPage() {
       </div>
     </AppLayout>
   );
+
+  
 }

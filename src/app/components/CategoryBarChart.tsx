@@ -22,13 +22,16 @@ const data = [
 ];
 
 const barColors = [
-  'var(--primary)',
-  'var(--accent)',
-  'var(--success)',
-  'var(--warning)',
-  'var(--danger)',
-  'var(--info)',
+  '#0f9b8e',
+  '#f59e0b',
+  '#16a34a',
+  '#d97706',
+  '#dc2626',
+  '#2563eb',
 ];
+
+const gridColor = '#dbe6ef';
+const axisColor = '#526b88';
 
 interface TooltipProps {
   active?: boolean;
@@ -51,15 +54,15 @@ export default function CategoryBarChart() {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 4, right: 4, left: -15, bottom: 0 }}>
-        <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="categoria"
-          tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+          tick={{ fontSize: 10, fill: axisColor }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+          tick={{ fontSize: 11, fill: axisColor }}
           axisLine={false}
           tickLine={false}
         />

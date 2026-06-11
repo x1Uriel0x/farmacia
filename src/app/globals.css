@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
+  --background: 210 24% 97%;
+  --foreground: 222 47% 9%;
 
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
@@ -12,27 +12,198 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
 
-  --primary: 221 83% 53%;
+  --primary: 189 94% 34%;
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 210 22% 93%;
+  --secondary-foreground: 215 25% 27%;
 
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  --muted: 210 28% 94%;
+  --muted-foreground: 215 18% 41%;
 
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
+  --accent: 43 96% 48%;
+  --accent-foreground: 222 47% 9%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 221 83% 53%;
+  --border: 214 24% 86%;
+  --input: 214 24% 86%;
+  --ring: 189 94% 34%;
+
+  --success: 158 64% 36%;
+  --success-bg: 151 81% 96%;
+  --warning: 32 95% 44%;
+  --warning-bg: 48 100% 96%;
+  --danger: 0 72% 51%;
+  --danger-bg: 0 86% 97%;
+  --info: 217 91% 48%;
+  --info-bg: 214 100% 97%;
 }
 
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin: 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-all duration-150 hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  }
+
+  .btn-secondary {
+    @apply rounded-lg bg-secondary px-4 py-2 font-medium text-secondary-foreground transition-all duration-150 hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply rounded-lg bg-danger px-4 py-2 font-medium text-white transition-all duration-150 hover:bg-danger/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-150 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .label-text {
+    @apply mb-1 block text-sm font-medium text-foreground;
+  }
+
+  .helper-text {
+    @apply mt-1 text-xs text-muted-foreground;
+  }
+
+  .error-text {
+    @apply mt-1 text-xs text-danger;
+  }
+
+  .section-header {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .badge-disponible {
+    @apply inline-flex items-center gap-1 rounded-full bg-success px-2 py-0.5 text-xs font-medium text-white;
+  }
+
+  .badge-bajo-stock {
+    @apply inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-xs font-medium text-white;
+  }
+
+  .badge-agotado {
+    @apply inline-flex items-center gap-1 rounded-full bg-danger px-2 py-0.5 text-xs font-medium text-white;
+  }
+
+  .badge-por-vencer {
+    @apply inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground;
+  }
+
+  .badge-descontinuado {
+    @apply inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground;
+  }
+
+  .nav-item {
+    @apply flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground;
+  }
+
+  .nav-item-active {
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground hover:opacity-90;
+  }
+
+  .table-header {
+    @apply border-b border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm text-foreground;
+  }
+
+  .table-row {
+    @apply border-b border-border transition-colors duration-100 hover:bg-muted/45;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sidebar-transition {
+    transition: width 300ms ease;
+  }
+
+  .fade-in {
+    animation: fadeIn 200ms ease forwards;
+  }
+
+  .slide-up {
+    animation: slideUp 200ms ease forwards;
+  }
+
+  .scale-enter {
+    animation: scaleEnter 150ms ease forwards;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }

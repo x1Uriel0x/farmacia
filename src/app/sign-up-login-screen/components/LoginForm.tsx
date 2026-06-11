@@ -66,29 +66,52 @@ export default function LoginForm() {
   };
 
   // Backend integration point: POST /api/auth/login
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+ const onSubmit = async (data: LoginFormData) => {
+  setIsLoading(true);
 
-    await new Promise((r) => setTimeout(r, 1200));
+  try {
 
-    const valid = demoCredentials.some(
-      (c) => c.email === data.email && c.password === data.password
-    );
+    const response = await fetch('http://localhost/farmacia-api/login.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        correo: data.email,
+        password: data.password,
+      }),
+    });
 
-    if (!valid) {
+    const result = await response.json();
+
+    if (!result.success) {
+
       setIsLoading(false);
+
       setError('email', {
         type: 'manual',
-        message: 'Credenciales inválidas — usa las cuentas demo de abajo para iniciar sesión',
+        message: 'Correo o contraseña incorrectos',
       });
+
       return;
     }
 
-    toast.success('Sesión iniciada correctamente');
-    setIsLoading(false);
-    window.location.href = '/';
-  };
+    localStorage.setItem('usuario', JSON.stringify(result.usuario));
 
+    toast.success('Sesión iniciada correctamente');
+
+    setIsLoading(false);
+
+    window.location.href = '/';
+
+  } catch (error) {
+
+    setIsLoading(false);
+
+    toast.error('Error al conectar con el servidor');
+
+  }
+};
   return (
     <div className="w-full max-w-md">
       {/* Mobile logo */}
@@ -256,5 +279,6 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
+
   );
 }

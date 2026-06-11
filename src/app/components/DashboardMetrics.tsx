@@ -9,7 +9,7 @@ const metrics = [
     change: '+12.4%',
     trend: 'up' as const,
     icon: <DollarSign size={20} />,
-    color: 'primary',
+    color: 'teal',
     colSpan: 'col-span-1 md:col-span-2',
     hero: true,
   },
@@ -20,7 +20,7 @@ const metrics = [
     change: '+5 vs ayer',
     trend: 'up' as const,
     icon: <FileText size={20} />,
-    color: 'info',
+    color: 'blue',
     colSpan: 'col-span-1',
     hero: false,
   },
@@ -31,7 +31,7 @@ const metrics = [
     change: '-3.1%',
     trend: 'down' as const,
     icon: <ShoppingBag size={20} />,
-    color: 'secondary',
+    color: 'orange',
     colSpan: 'col-span-1',
     hero: false,
   },
@@ -42,7 +42,7 @@ const metrics = [
     change: 'Requieren reorden',
     trend: 'alert' as const,
     icon: <AlertTriangle size={20} />,
-    color: 'warning',
+    color: 'amber',
     colSpan: 'col-span-1',
     hero: false,
   },
@@ -53,7 +53,7 @@ const metrics = [
     change: 'Lotes críticos',
     trend: 'alert' as const,
     icon: <Clock size={20} />,
-    color: 'danger',
+    color: 'red',
     colSpan: 'col-span-1',
     hero: false,
   },
@@ -64,19 +64,55 @@ const metrics = [
     change: '+$1,200 esta semana',
     trend: 'up' as const,
     icon: <Package size={20} />,
-    color: 'success',
+    color: 'green',
     colSpan: 'col-span-1 md:col-span-2',
     hero: false,
   },
 ];
 
-const colorMap: Record<string, { bg: string; icon: string; badge: string }> = {
-  primary: { bg: 'bg-primary/5 border-primary/20', icon: 'bg-primary/10 text-primary', badge: 'text-success' },
-  info: { bg: 'bg-info-bg border-info/20', icon: 'bg-info/10 text-info', badge: 'text-success' },
-  secondary: { bg: 'bg-muted border-border', icon: 'bg-secondary text-secondary-foreground', badge: 'text-danger' },
-  warning: { bg: 'bg-warning-bg border-warning/30', icon: 'bg-warning/10 text-warning', badge: 'text-warning' },
-  danger: { bg: 'bg-danger-bg border-danger/30', icon: 'bg-danger/10 text-danger', badge: 'text-danger' },
-  success: { bg: 'bg-success-bg border-success/20', icon: 'bg-success/10 text-success', badge: 'text-success' },
+const colorMap: Record<string, { accent: string; icon: string; value: string; ring: string; badge: string }> = {
+  teal: {
+    accent: 'bg-[#0f9b8e]',
+    icon: 'bg-[#0f9b8e] text-white',
+    value: 'text-[#0f766e]',
+    ring: 'group-hover:border-[#0f9b8e]/50 group-hover:shadow-[#0f9b8e]/10',
+    badge: 'text-success',
+  },
+  blue: {
+    accent: 'bg-[#2563eb]',
+    icon: 'bg-[#2563eb] text-white',
+    value: 'text-[#1d4ed8]',
+    ring: 'group-hover:border-[#2563eb]/50 group-hover:shadow-[#2563eb]/10',
+    badge: 'text-success',
+  },
+  orange: {
+    accent: 'bg-[#f59e0b]',
+    icon: 'bg-[#f59e0b] text-white',
+    value: 'text-[#d97706]',
+    ring: 'group-hover:border-[#f59e0b]/50 group-hover:shadow-[#f59e0b]/10',
+    badge: 'text-danger',
+  },
+  amber: {
+    accent: 'bg-[#d97706]',
+    icon: 'bg-[#d97706] text-white',
+    value: 'text-[#b45309]',
+    ring: 'group-hover:border-[#d97706]/50 group-hover:shadow-[#d97706]/10',
+    badge: 'text-warning',
+  },
+  red: {
+    accent: 'bg-[#dc2626]',
+    icon: 'bg-[#dc2626] text-white',
+    value: 'text-[#b91c1c]',
+    ring: 'group-hover:border-[#dc2626]/50 group-hover:shadow-[#dc2626]/10',
+    badge: 'text-danger',
+  },
+  green: {
+    accent: 'bg-[#16a34a]',
+    icon: 'bg-[#16a34a] text-white',
+    value: 'text-[#15803d]',
+    ring: 'group-hover:border-[#16a34a]/50 group-hover:shadow-[#16a34a]/10',
+    badge: 'text-success',
+  },
 };
 
 export default function DashboardMetrics() {
@@ -87,10 +123,11 @@ export default function DashboardMetrics() {
         return (
           <div
             key={metric.id}
-            className={`card p-5 border ${colors.bg} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2' : ''}`}
+            className={`card group relative overflow-hidden border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${colors.ring} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2' : ''}`}
           >
+            <span className={`absolute inset-x-0 top-0 h-1 ${colors.accent}`} />
             <div className="flex items-start justify-between mb-3">
-              <div className={`p-2 rounded-lg ${colors.icon}`}>
+              <div className={`p-2.5 rounded-lg shadow-sm ${colors.icon}`}>
                 {metric.icon}
               </div>
               {metric.trend === 'up' && (
@@ -103,7 +140,7 @@ export default function DashboardMetrics() {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               {metric.label}
             </p>
-            <p className={`tabular-nums font-bold text-foreground ${metric.hero ? 'text-3xl' : 'text-2xl'}`}>
+            <p className={`tabular-nums font-bold ${colors.value} ${metric.hero ? 'text-3xl' : 'text-2xl'}`}>
               {metric.value}
             </p>
             <p className={`text-xs mt-1 font-medium ${colors.badge}`}>
