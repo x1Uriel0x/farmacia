@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 
 interface AppLayoutProps {
@@ -10,6 +10,17 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+
+  useEffect(() => {
+
+  const usuario = localStorage.getItem('usuario');
+
+  if (!usuario) {
+    window.location.href = '/sign-up-login-screen';
+  }
+
+}, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

@@ -64,7 +64,7 @@ export default function SalesContent() {
     setFormaPago('efectivo');
   }, []);
 
-  // Calculations
+  // Calcular
   const subtotalBruto = cart.reduce((sum, item) => {
     const lineTotal = item.precioUnitario * item.cantidad;
     const lineDiscount = lineTotal * (item.descuento / 100);
@@ -78,25 +78,66 @@ export default function SalesContent() {
 
   // Backend integration point: POST /api/ventas — create sale + invoice, update stock
   const handleEmitirFactura = async () => {
-    if (cart.length === 0) {
-      toast.error('El carrito está vacío — agrega productos antes de emitir la factura');
-      return;
-    }
-    if (!cliente.nombre.trim()) {
-      toast.error('El nombre del cliente es requerido para emitir la factura');
-      return;
-    }
-    if (!cliente.identificacion.trim()) {
-      toast.error('La identificación del cliente es requerida');
-      return;
-    }
+  if (cart.length === 0) {
+    toast.error('El carrito está vacío — agrega productos antes de emitir la factura');
+    return;
+  }
+
+  if (!cliente.nombre.trim()) {
+    toast.error('El nombre del cliente es requerido para emitir la factura');
+    return;
+  }
+
+  if (!cliente.identificacion.trim()) {
+    toast.error('La identificación del cliente es requerida');
+    return;
+  }
+
+  try {
     setIsEmitting(true);
-    await new Promise((r) => setTimeout(r, 1000));
+
+    const response = await fetch(
+      'http://localhost/farmacia-api/crear_venta.php',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          cliente: cliente.nombre,
+          identificacion: cliente.identificacion,
+          subtotal: subtotalNeto,
+          iva: ivaAmount,
+          total: total,
+          forma_pago: formaPago,
+          productos: cart
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!result.success) {
+      toast.error('Error al registrar la venta');
+      return;
+    }
+
     const num = generateInvoiceNumber();
+
     setInvoiceNumber(num);
-    setIsEmitting(false);
     setIsInvoiceOpen(true);
-  };
+
+  } catch (error) {
+
+    console.error(error);
+    toast.error('Error de conexión con el servidor');
+
+  } finally {
+
+    setIsEmitting(false);
+
+  }
+};
 
   const handleInvoiceClose = () => {
     setIsInvoiceOpen(false);

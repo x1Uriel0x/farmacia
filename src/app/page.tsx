@@ -7,6 +7,12 @@ import DashboardAlerts from './components/DashboardAlerts';
 import DashboardCharts from './components/DashboardCharts';
 import DashboardActivity from './components/DashboardActivity';
 
+import { useRouter } from 'next/navigation';
+
+
+
+
+
 export default function DashboardPage() {
   
   useEffect(() => {
@@ -18,6 +24,18 @@ export default function DashboardPage() {
     }
 
   }, []);
+
+  const router = useRouter();
+
+useEffect(() => {
+
+  const usuario = localStorage.getItem('usuario');
+
+  if (!usuario) {
+    router.replace('/sign-up-login-screen');
+  }
+
+}, [router]);
 
   return (
     <AppLayout>

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Package } from 'lucide-react';
-import { catalogoProductos, type CartItem, type ProductoCatalogo } from './salesData';
+import { type CartItem, type ProductoCatalogo } from './salesData';
 
 interface ProductSearchPanelProps {
   onAddToCart: (item: Omit<CartItem, 'id'>) => void;
@@ -11,6 +11,7 @@ interface ProductSearchPanelProps {
 
 export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSearchPanelProps) {
   const [query, setQuery] = useState('');
+  const [catalogoProductos, setCatalogoProductos] = useState<ProductoCatalogo[]>([]);
   const [results, setResults] = useState<ProductoCatalogo[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -34,7 +35,8 @@ export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSe
     );
     setResults(filtered);
     setShowDropdown(true);
-  }, [query]);
+
+  }, [query, catalogoProductos]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -68,8 +70,39 @@ export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSe
     setQuantities((prev) => ({ ...prev, [product.id]: 1 }));
   };
 
-  const cartProductIds = new Set(cartItems.map((c) => c.productoId));
+const cartProductIds = new Set(cartItems.map((c) => c.productoId));
 
+const cargarProductos = async () => {
+  try {
+    const response = await fetch(
+      'http://localhost/farmacia-api/productos.php'
+    );
+
+    const data = await response.json();
+
+    const productosFormateados = data.map((p: any) => ({
+      id: String(p.id),
+      sku: p.sku,
+      nombre: p.nombre,
+      laboratorio: p.laboratorio,
+      categoria: p.categoria,
+      precioVenta: Number(p.precioVenta),
+      stockActual: Number(p.stockActual),
+      status: p.status,
+    }));
+
+    console.log('PRODUCTOS CARGADOS:', productosFormateados);
+
+    setCatalogoProductos(productosFormateados);
+
+  } catch (error) {
+    console.error('ERROR:', error);
+  }
+};
+
+useEffect(() => {
+  cargarProductos();
+}, []);
   return (
     <div className="card p-5">
       <h2 className="section-header mb-1">Buscar Medicamento</h2>

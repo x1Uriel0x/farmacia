@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AppLogo from './ui/AppLogo';
@@ -32,7 +32,7 @@ interface NavItem {
   group: string;
 }
 
-const navItems: NavItem[] = [
+let navItems: NavItem[] = [
   {
     id: 'nav-dashboard',
     label: 'Panel Principal',
@@ -58,8 +58,25 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }: SidebarProps) {
+  const [rol, setRol] = useState('');
   const pathname = usePathname();
+  useEffect(() => {
 
+  const usuario = JSON.parse(
+    localStorage.getItem('usuario') || '{}'
+  );
+
+  setRol(usuario.rol || '');
+
+}, []);
+
+  if (rol === 'consulta') {
+
+  navItems = navItems.filter(
+    item => item.href !== '/sales-invoicing'
+  );
+
+}
   const groups = [
     { key: 'principal', label: 'Principal' },
     { key: 'operaciones', label: 'Operaciones' },
