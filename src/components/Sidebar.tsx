@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import AppLogo from './ui/AppLogo';
 import {
   LayoutDashboard,
@@ -32,7 +32,7 @@ interface NavItem {
   group: string;
 }
 
-let navItems: NavItem[] = [
+const navItems: NavItem[] = [
   {
     id: 'nav-dashboard',
     label: 'Panel Principal',
@@ -50,7 +50,7 @@ let navItems: NavItem[] = [
   },
   {
     id: 'nav-sales',
-    label: 'Ventas y Facturación',
+    label: 'Ventas y Facturacion',
     href: '/sales-invoicing',
     icon: <ShoppingCart size={18} />,
     group: 'operaciones',
@@ -60,31 +60,30 @@ let navItems: NavItem[] = [
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }: SidebarProps) {
   const [rol, setRol] = useState('');
   const pathname = usePathname();
+  const router = useRouter();
+
   useEffect(() => {
+    const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    setRol(String(usuario.rol || '').toLowerCase());
+  }, []);
 
-  const usuario = JSON.parse(
-    localStorage.getItem('usuario') || '{}'
-  );
+  const visibleNavItems = rol === 'consulta'
+    ? navItems.filter((item) => item.href !== '/sales-invoicing')
+    : navItems;
 
-  setRol(usuario.rol || '');
-
-}, []);
-
-  if (rol === 'consulta') {
-
-  navItems = navItems.filter(
-    item => item.href !== '/sales-invoicing'
-  );
-
-}
   const groups = [
     { key: 'principal', label: 'Principal' },
     { key: 'operaciones', label: 'Operaciones' },
   ];
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('usuario');
+    localStorage.removeItem('usuario');
+    router.replace('/sign-up-login-screen');
+  };
+
   return (
     <>
-      {/* Desktop sidebar */}
       <aside
         className={`
           hidden lg:flex flex-col bg-card border-r border-border sidebar-transition relative z-10
@@ -95,12 +94,12 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           collapsed={collapsed}
           onToggleCollapse={onToggleCollapse}
           pathname={pathname}
-          navItems={navItems}
+          navItems={visibleNavItems}
           groups={groups}
+          onLogout={handleLogout}
         />
       </aside>
 
-      {/* Mobile sidebar */}
       <aside
         className={`
           lg:hidden fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border
@@ -121,10 +120,11 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           collapsed={false}
           onToggleCollapse={() => {}}
           pathname={pathname}
-          navItems={navItems}
+          navItems={visibleNavItems}
           groups={groups}
           isMobile
           onMobileClose={onMobileClose}
+          onLogout={handleLogout}
         />
       </aside>
     </>
@@ -137,6 +137,7 @@ interface SidebarContentProps {
   pathname: string;
   navItems: NavItem[];
   groups: { key: string; label: string }[];
+  onLogout: () => void;
   isMobile?: boolean;
   onMobileClose?: () => void;
 }
@@ -147,12 +148,12 @@ function SidebarContent({
   pathname,
   navItems,
   groups,
+  onLogout,
   isMobile,
   onMobileClose,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
-      {/* Logo header */}
       {!isMobile && (
         <div className={`flex items-center border-b border-border px-3 py-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && (
@@ -174,7 +175,6 @@ function SidebarContent({
         </div>
       )}
 
-      {/* Expand button when collapsed */}
       {collapsed && !isMobile && (
         <button
           onClick={onToggleCollapse}
@@ -185,11 +185,11 @@ function SidebarContent({
         </button>
       )}
 
-      {/* Nav groups */}
       <nav className="flex-1 px-2 py-3 overflow-y-auto no-scrollbar">
         {groups.map((group) => {
-          const groupItems = navItems.filter((i) => i.group === group.key);
+          const groupItems = navItems.filter((item) => item.group === group.key);
           if (groupItems.length === 0) return null;
+
           return (
             <div key={`group-${group.key}`} className="mb-4">
               {!collapsed && (
@@ -200,6 +200,7 @@ function SidebarContent({
               {collapsed && <div className="border-t border-border mx-2 mb-2" />}
               {groupItems.map((item) => {
                 const isActive = pathname === item.href;
+
                 return (
                   <Link
                     key={item.id}
@@ -230,7 +231,6 @@ function SidebarContent({
         })}
       </nav>
 
-      {/* Bottom user section */}
       <div className={`border-t border-border px-2 py-3 ${collapsed ? 'flex flex-col items-center gap-2' : ''}`}>
         {!collapsed ? (
           <>
@@ -244,13 +244,14 @@ function SidebarContent({
               </div>
               <Bell size={14} className="text-muted-foreground flex-shrink-0" />
             </div>
-            <Link
-              href="/sign-up-login-screen"
-              className="nav-item mt-1 text-danger hover:bg-danger-bg hover:text-danger"
+            <button
+              type="button"
+              onClick={onLogout}
+              className="nav-item mt-1 w-full text-danger hover:bg-danger-bg hover:text-danger"
             >
               <LogOut size={16} />
-              <span>Cerrar Sesión</span>
-            </Link>
+              <span>Cerrar Sesion</span>
+            </button>
           </>
         ) : (
           <>
@@ -260,12 +261,17 @@ function SidebarContent({
             >
               <User size={14} className="text-primary-foreground" />
             </div>
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Configuración">
+            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Configuracion">
               <Settings size={16} className="text-muted-foreground" />
             </button>
-            <Link href="/sign-up-login-screen" className="p-2 rounded-lg hover:bg-danger-bg transition-colors" title="Cerrar Sesión">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="p-2 rounded-lg hover:bg-danger-bg transition-colors"
+              title="Cerrar Sesion"
+            >
               <LogOut size={16} className="text-danger" />
-            </Link>
+            </button>
           </>
         )}
       </div>

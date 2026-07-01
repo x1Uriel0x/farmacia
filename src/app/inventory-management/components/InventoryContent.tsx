@@ -19,7 +19,7 @@ export default function InventoryContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  const [rol, setRol] = useState('');
   const bajoStock = productosList.filter((p) => p.status === 'bajo-stock').length;
   const porVencer = productosList.filter((p) => p.status === 'por-vencer').length;
   const agotados = productosList.filter((p) => p.status === 'agotado').length;
@@ -48,9 +48,24 @@ const cargarProductos = async () => {
     toast.error('Error al cargar productos');
   }
 };
-useEffect(() => {
-  cargarProductos();
-}, []);
+    useEffect(() => {
+      cargarProductos();
+
+      const usuario = sessionStorage.getItem('usuario');
+
+      console.log("SESSION STORAGE:", usuario);
+
+      if (usuario) {
+        const datos = JSON.parse(usuario);
+
+        console.log("USUARIO:", datos);
+        console.log("ROL:", datos.rol);
+
+        setRol(String(datos.rol).toLowerCase());
+      }
+    }, []);
+
+
   const filtered = useMemo(() => {
     return productosList.filter((p) => {
       const matchSearch =
@@ -203,7 +218,7 @@ useEffect(() => {
       setSelectedIds(new Set(paginated.map((p) => p.id)));
     }
   };
-
+console.log("ROL EN EL COMPONENTE:", rol);
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -214,13 +229,18 @@ useEffect(() => {
             {productosList.length} productos registrados · Actualizado hace 2 min
           </p>
         </div>
-        <button
-          onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
-          className="btn-primary flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Registrar Producto
-        </button>
+        {rol === 'admin' && (
+          <button
+            onClick={() => {
+              setEditingProduct(null);
+              setIsModalOpen(true);
+            }}
+            className="btn-primary flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Registrar Producto
+          </button>
+        )}
       </div>
 
       {/* Alert banners */}

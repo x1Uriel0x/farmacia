@@ -96,7 +96,8 @@ export default function LoginForm() {
       return;
     }
 
-    localStorage.setItem('usuario', JSON.stringify(result.usuario));
+    localStorage.removeItem('usuario');
+    sessionStorage.setItem('usuario', JSON.stringify(result.usuario));
 
     toast.success('Sesión iniciada correctamente');
 

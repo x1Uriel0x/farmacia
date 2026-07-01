@@ -1,42 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import AppLayout from '../components/AppLayout';
 import DashboardMetrics from './components/DashboardMetrics';
 import DashboardAlerts from './components/DashboardAlerts';
 import DashboardCharts from './components/DashboardCharts';
 import DashboardActivity from './components/DashboardActivity';
 
-import { useRouter } from 'next/navigation';
-
-
-
-
-
 export default function DashboardPage() {
-  
-  useEffect(() => {
-
-    const usuario = localStorage.getItem('usuario');
-
-    if (!usuario) {
-      window.location.href = '/sign-up-login-screen';
-    }
-
-  }, []);
-
-  const router = useRouter();
-
-useEffect(() => {
-
-  const usuario = localStorage.getItem('usuario');
-
-  if (!usuario) {
-    router.replace('/sign-up-login-screen');
-  }
-
-}, [router]);
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -70,6 +41,4 @@ useEffect(() => {
       </div>
     </AppLayout>
   );
-
-  
 }
