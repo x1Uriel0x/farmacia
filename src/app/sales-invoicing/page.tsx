@@ -6,7 +6,7 @@ import SalesContent from './components/SalesContent';
 
 export default function SalesInvoicingPage() {
   return (
-    <AppLayout allowedRoles={['administrador', 'vendedor']}>
+    <AppLayout allowedRoles={['admin', 'vendedor']}>
       <SalesContent />
     </AppLayout>
   );

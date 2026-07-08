@@ -96,6 +96,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           pathname={pathname}
           navItems={visibleNavItems}
           groups={groups}
+          rol={rol}
           onLogout={handleLogout}
         />
       </aside>
@@ -122,6 +123,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           pathname={pathname}
           navItems={visibleNavItems}
           groups={groups}
+          rol={rol}
           isMobile
           onMobileClose={onMobileClose}
           onLogout={handleLogout}
@@ -137,6 +139,7 @@ interface SidebarContentProps {
   pathname: string;
   navItems: NavItem[];
   groups: { key: string; label: string }[];
+  rol: string;
   onLogout: () => void;
   isMobile?: boolean;
   onMobileClose?: () => void;
@@ -148,10 +151,15 @@ function SidebarContent({
   pathname,
   navItems,
   groups,
+  rol,
   onLogout,
   isMobile,
   onMobileClose,
 }: SidebarContentProps) {
+  const rolVisible = rol
+    ? rol.charAt(0).toUpperCase() + rol.slice(1)
+    : 'Usuario';
+
   return (
     <div className="flex flex-col h-full">
       {!isMobile && (
@@ -239,8 +247,8 @@ function SidebarContent({
                 <User size={14} className="text-primary-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">Admin Farmacia</p>
-                <p className="text-xs text-muted-foreground truncate">Administrador</p>
+                <p className="text-sm font-medium text-foreground truncate">Farmacia</p>
+                <p className="text-xs text-muted-foreground truncate">{rolVisible}</p>
               </div>
               <Bell size={14} className="text-muted-foreground flex-shrink-0" />
             </div>
@@ -257,7 +265,7 @@ function SidebarContent({
           <>
             <div
               className="w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer"
-              title="Admin Farmacia"
+              title={`Farmacia - ${rolVisible}`}
             >
               <User size={14} className="text-primary-foreground" />
             </div>

@@ -106,9 +106,10 @@ const cargarProductos = async () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            id: editingProduct.id,
-            ...data
+            body: JSON.stringify({
+              id: editingProduct.id,
+              ...data,
+              usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre
           })
         }
       );
@@ -117,14 +118,17 @@ const cargarProductos = async () => {
 
       response = await fetch(
         'http://localhost/farmacia-api/crear_producto.php',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        }
-      );
+    {
+      method: 'POST',
+       headers: {
+       'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+      ...data,
+      usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre
+    })
+  }
+);
 
     }
 
@@ -169,7 +173,8 @@ const cargarProductos = async () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          id: deleteTarget.id
+          id: deleteTarget.id,
+          usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre
         })
       }
     );
@@ -243,7 +248,7 @@ console.log("ROL EN EL COMPONENTE:", rol);
         )}
       </div>
 
-      {/* Alert banners */}
+      {/* Alerts de aviso */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {bajoStock > 0 && (
           <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-bg border border-warning/30">
@@ -274,7 +279,7 @@ console.log("ROL EN EL COMPONENTE:", rol);
         )}
       </div>
 
-      {/* Filters */}
+      {/* Filtrar */}
       <div className="card p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
@@ -329,7 +334,7 @@ console.log("ROL EN EL COMPONENTE:", rol);
         </div>
       )}
 
-      {/* Table */}
+      {/* tabla */}
       <InventoryTable
         productos={paginated}
         allSelected={selectedIds.size === paginated.length && paginated.length > 0}
@@ -338,6 +343,7 @@ console.log("ROL EN EL COMPONENTE:", rol);
         onSelectAll={handleSelectAll}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        rol={rol}
         totalItems={filtered.length}
         currentPage={currentPage}
         totalPages={totalPages}
@@ -346,7 +352,7 @@ console.log("ROL EN EL COMPONENTE:", rol);
         onItemsPerPageChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}
       />
 
-      {/* Modals */}
+      {/* Modal */}
       <ProductModal
         open={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingProduct(null); }}

@@ -110,7 +110,8 @@ export default function SalesContent() {
           iva: ivaAmount,
           total: total,
           forma_pago: formaPago,
-          productos: cart
+          productos: cart,
+          usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre,
         })
       }
     );

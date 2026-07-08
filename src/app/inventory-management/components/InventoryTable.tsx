@@ -15,6 +15,7 @@ interface InventoryTableProps {
   onEdit: (p: Producto) => void;
   onDelete: (p: Producto) => void;
   totalItems: number;
+  rol : string;
   currentPage: number;
   totalPages: number;
   itemsPerPage: number;
@@ -40,6 +41,7 @@ export default function InventoryTable({
   onSelectAll,
   onEdit,
   onDelete,
+  rol,
   totalItems,
   currentPage,
   totalPages,
@@ -186,6 +188,7 @@ export default function InventoryTable({
                     <Badge variant={p.status as BadgeVariant} label={statusLabel[p.status]} />
                   </td>
                   <td className="table-cell">
+                    {rol === 'admin' && (
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => onEdit(p)}
@@ -195,24 +198,35 @@ export default function InventoryTable({
                       >
                         <Pencil size={14} />
                       </button>
+
                       <button
                         onClick={() => onDelete(p)}
                         className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors"
-                        title={`Eliminar ${p.nombre} — esta acción no se puede deshacer`}
+                        title={`Eliminar ${p.nombre}`}
                         aria-label={`Eliminar ${p.nombre}`}
                       >
-                        <Trash2 size={14} />
+                    <Trash2 size={14} />
                       </button>
-                    </div>
+                      </div>
+                    )}
                     {/* Fallback always-visible actions for non-hover devices */}
-                    <div className="flex items-center justify-end gap-1 sm:hidden">
-                      <button onClick={() => onEdit(p)} className="p-1.5 rounded-lg hover:bg-info/10 text-muted-foreground hover:text-info transition-colors">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => onDelete(p)} className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    {rol === 'admin' && (
+                  <div className="flex items-center justify-end gap-1 sm:hidden">
+                    <button
+                      onClick={() => onEdit(p)}
+                      className="p-1.5 rounded-lg hover:bg-info/10 text-muted-foreground hover:text-info transition-colors"
+                      >
+                    <Pencil size={14} />
+                    </button>
+
+                    <button
+                      onClick={() => onDelete(p)}
+                      className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors"
+                      >
+                    <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
                   </td>
                 </tr>
               ))

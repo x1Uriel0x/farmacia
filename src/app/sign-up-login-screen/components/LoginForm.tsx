@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Loader2, Copy, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LoginFormData {
@@ -11,59 +11,18 @@ interface LoginFormData {
   remember: boolean;
 }
 
-const demoCredentials = [
-  {
-    id: 'cred-admin',
-    role: 'Administrador',
-    email: 'admin@pharmacontrol.ec',
-    password: 'Admin#2026!',
-    description: 'Acceso completo: inventario, ventas, usuarios, reportes',
-    badgeClass: 'bg-info/10 text-info border border-info/20',
-  },
-  {
-    id: 'cred-vendedor',
-    role: 'Vendedor',
-    email: 'vendedor@pharmacontrol.ec',
-    password: 'Vend#2026!',
-    description: 'Ventas y consulta de inventario',
-    badgeClass: 'bg-primary/10 text-primary border border-primary/20',
-  },
-  {
-    id: 'cred-consulta',
-    role: 'Consulta',
-    email: 'consulta@pharmacontrol.ec',
-    password: 'Cons#2026!',
-    description: 'Solo lectura: inventario y reportes',
-    badgeClass: 'bg-muted text-muted-foreground border border-border',
-  },
-];
-
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    setValue,
     setError,
     formState: { errors },
   } = useForm<LoginFormData>({
     defaultValues: { email: '', password: '', remember: false },
   });
-
-  const handleCopy = (text: string, fieldId: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldId);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const handleAutofill = (email: string, password: string) => {
-    setValue('email', email);
-    setValue('password', password);
-    toast.info('Credenciales cargadas — haz clic en Iniciar Sesión');
-  };
 
   // Backend integration point: POST /api/auth/login
  const onSubmit = async (data: LoginFormData) => {
@@ -217,68 +176,6 @@ export default function LoginForm() {
         </button>
       </form>
 
-      {/* Demo credentials */}
-      <div className="mt-8 border border-border rounded-xl overflow-hidden">
-        <div className="bg-muted/50 px-4 py-3 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Cuentas de demostración
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Haz clic en un rol para autocompletar el formulario
-          </p>
-        </div>
-        <div className="divide-y divide-border">
-          {demoCredentials.map((cred) => (
-            <div key={cred.id} className="px-4 py-3 hover:bg-muted/30 transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cred.badgeClass}`}>
-                  {cred.role}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleAutofill(cred.email, cred.password)}
-                  className="text-xs text-primary font-medium hover:underline"
-                >
-                  Usar esta cuenta
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground mb-2">{cred.description}</p>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between bg-background rounded-md px-2.5 py-1.5 border border-border">
-                  <span className="text-xs text-foreground font-mono truncate flex-1">{cred.email}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(cred.email, `${cred.id}-email`)}
-                    className="ml-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                    aria-label="Copiar email"
-                  >
-                    {copiedField === `${cred.id}-email` ? (
-                      <Check size={12} className="text-success" />
-                    ) : (
-                      <Copy size={12} />
-                    )}
-                  </button>
-                </div>
-                <div className="flex items-center justify-between bg-background rounded-md px-2.5 py-1.5 border border-border">
-                  <span className="text-xs text-foreground font-mono">{cred.password}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(cred.password, `${cred.id}-pass`)}
-                    className="ml-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                    aria-label="Copiar contraseña"
-                  >
-                    {copiedField === `${cred.id}-pass` ? (
-                      <Check size={12} className="text-success" />
-                    ) : (
-                      <Copy size={12} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
 
   );
