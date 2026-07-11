@@ -3,6 +3,8 @@
 import React, { useRef } from 'react';
 import { Printer, Download, X, CheckCircle } from 'lucide-react';
 import { type CartItem, type ClienteInfo, type FormaPago, IVA_RATE } from './salesData';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface InvoicePreviewModalProps {
   open: boolean;
@@ -53,7 +55,7 @@ export default function InvoicePreviewModal({
   total,
 }: InvoicePreviewModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const issuedAt = formatDate(new Date(2026, 4, 17, 22, 35));
+  const issuedAt = formatDate(new Date());
 
   const handlePrint = () => {
     if (!printRef.current) return;
@@ -81,7 +83,134 @@ export default function InvoicePreviewModal({
     win.document.close();
     win.print();
   };
+const handleDownloadPDF = () => {
 
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("FARMACIA CENTRAL", 105, 15, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.text("Sistema de Inventario y Facturación", 105, 22, { align: "center" });
+
+  doc.setFontSize(10);
+
+  doc.text(`Factura: ${invoiceNumber}`, 14, 35);
+  doc.text(`Fecha: ${issuedAt}`, 14, 41);
+
+  doc.text(`Cliente: ${cliente.nombre}`, 14, 49);
+  doc.text(
+    `${tipoIdLabel[cliente.tipoIdentificacion]}: ${cliente.identificacion}`,
+    14,
+    55
+  );
+
+  doc.text(
+    `Forma de pago: ${formaPagoLabel[formaPago]}`,
+    14,
+    61
+  );
+
+  const usuario = JSON.parse(
+    sessionStorage.getItem("usuario") || "{}"
+  );
+
+  doc.text(
+    `Atendido por: ${usuario.nombre}`,
+    14,
+    67
+  );
+
+  autoTable(doc, {
+    startY: 75,
+    head: [[
+      "Medicamento",
+      "Cant.",
+      "P. Unit.",
+      "Desc.",
+      "Subtotal"
+    ]],
+
+    body: cart.map((item) => {
+
+      const totalLinea =
+        item.precioUnitario * item.cantidad;
+
+      const descuento =
+        totalLinea * (item.descuento / 100);
+
+      return [
+
+        item.nombre,
+
+        item.cantidad,
+
+        `$${item.precioUnitario.toFixed(2)}`,
+
+        `${item.descuento}%`,
+
+        `$${(totalLinea - descuento).toFixed(2)}`
+
+      ];
+
+    })
+
+  });
+
+  let y = (doc as any).lastAutoTable.finalY + 12;
+
+  doc.text(
+    `Subtotal: $${subtotalBruto.toFixed(2)}`,
+    140,
+    y
+  );
+
+  y += 7;
+
+  if (descuentoGlobalAmount > 0) {
+
+    doc.text(
+      `Descuento: -$${descuentoGlobalAmount.toFixed(2)}`,
+      140,
+      y
+    );
+
+    y += 7;
+
+  }
+
+  doc.text(
+    `IVA: $${ivaAmount.toFixed(2)}`,
+    140,
+    y
+  );
+
+  y += 7;
+
+  doc.setFontSize(13);
+
+  doc.text(
+    `TOTAL: $${total.toFixed(2)}`,
+    140,
+    y
+  );
+
+  y += 20;
+
+  doc.setFontSize(10);
+
+  doc.text(
+    "¡Gracias por su compra!",
+    105,
+    y,
+    {
+      align: "center"
+    }
+  );
+
+  doc.save(`${invoiceNumber}.pdf`);
+
+};
   if (!open) return null;
 
   return (
@@ -108,6 +237,7 @@ export default function InvoicePreviewModal({
               Imprimir
             </button>
             <button
+              onClick={handleDownloadPDF}
               className="flex items-center gap-1.5 text-xs btn-secondary py-1.5 px-3"
               title="Descargar PDF (función backend requerida)"
             >

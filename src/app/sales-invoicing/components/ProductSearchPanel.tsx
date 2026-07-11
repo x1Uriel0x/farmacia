@@ -64,6 +64,7 @@ export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSe
       precioUnitario: product.precioVenta,
       cantidad: qty,
       descuento: 0,
+      stockActual: product.stockActual,
     });
     setQuery('');
     setShowDropdown(false);

@@ -34,12 +34,33 @@ export default function SalesContent() {
     setCart((prev) => {
       const existing = prev.find((c) => c.productoId === item.productoId);
       if (existing) {
-        return prev.map((c) =>
-          c.productoId === item.productoId
-            ? { ...c, cantidad: c.cantidad + item.cantidad }
-            : c
+
+  const nuevaCantidad = existing.cantidad + item.cantidad;
+
+      if (nuevaCantidad > item.stockActual) {
+
+        toast.error(
+          `Stock insuficiente para ${item.nombre}. Solo hay ${item.stockActual} unidades disponibles.`
         );
+
+        return prev;
       }
+
+      return prev.map((c) =>
+        c.productoId === item.productoId
+          ? { ...c, cantidad: nuevaCantidad }
+          : c
+      );
+    }
+
+    if (item.cantidad > item.stockActual) {
+
+  toast.error(
+    `Stock insuficiente para ${item.nombre}.`
+  );
+
+  return prev;
+}
       return [...prev, { ...item, id: `cart-${item.productoId}-${Date.now()}` }];
     });
     toast.success(`${item.nombre} agregado al carrito`);

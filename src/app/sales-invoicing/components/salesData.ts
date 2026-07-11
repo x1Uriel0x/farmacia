@@ -32,6 +32,7 @@ export interface CartItem {
   precioUnitario: number;
   cantidad: number;
   descuento: number;
+  stockActual:number;
 }
 
 export interface ClienteInfo {
