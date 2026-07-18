@@ -30,7 +30,9 @@ const statusLabel: Record<StockStatus, string> = {
   'bajo-stock': 'Bajo Stock',
   agotado: 'Agotado',
   'por-vencer': 'Por Vencer',
+  vencido: 'Vencido',
   descontinuado: 'Descontinuado',
+
 };
 
 export default function InventoryTable({
@@ -49,6 +51,7 @@ export default function InventoryTable({
   onPageChange,
   onItemsPerPageChange,
 }: InventoryTableProps) {
+
   const [sortKey, setSortKey] = useState<SortKey>('nombre');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 

@@ -1,4 +1,4 @@
-export type StockStatus = 'disponible' | 'bajo-stock' | 'agotado' | 'por-vencer' | 'descontinuado';
+export type StockStatus = 'disponible' | 'bajo-stock' | 'agotado' | 'por-vencer' | 'descontinuado'|'vencido';
 
 export interface Producto {
   id: string;
@@ -14,6 +14,8 @@ export interface Producto {
   lote: string;
   status: StockStatus;
   controlado: boolean;
+  
+  
 }
 
 export const categorias = [

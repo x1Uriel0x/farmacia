@@ -6,8 +6,20 @@ import { Loader2 } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
 import { type Producto, categorias } from './inventoryData';
 
-type ProductFormData = Omit<Producto, 'id'>;
-
+type ProductFormData = {
+  sku: string;
+  nombre: string;
+  laboratorio: string;
+  categoria: string;
+  stockActual: number;
+  stockMinimo: number;
+  precioCompra: number;
+  precioVenta: number;
+  fechaVencimiento: string;
+  lote: string;
+  controlado: boolean;
+  descontinuado: boolean;
+};
 interface ProductModalProps {
   open: boolean;
   onClose: () => void;
@@ -34,8 +46,9 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
       precioVenta: 0,
       fechaVencimiento: '',
       lote: '',
-      status: 'disponible',
+      //status: 'disponible',
       controlado: false,
+      descontinuado: false,
     },
   });
 
@@ -52,7 +65,7 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
         precioVenta: product.precioVenta,
         fechaVencimiento: product.fechaVencimiento,
         lote: product.lote,
-        status: product.status,
+        //status: product.status,
         controlado: product.controlado,
       });
     } else {
@@ -67,8 +80,9 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
         precioVenta: 0,
         fechaVencimiento: '',
         lote: '',
-        status: 'disponible',
+        //status: 'disponible',
         controlado: false,
+        descontinuado:false,
       });
     }
   }, [product, reset, open]);
@@ -245,15 +259,26 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
               {errors.fechaVencimiento && <p className="error-text">{errors.fechaVencimiento.message}</p>}
             </div>
           </div>
-          <div className="mt-4">
-            <label htmlFor="status" className="label-text">Estado del Producto</label>
-            <select id="status" className="input-field" {...register('status')}>
-              <option value="disponible">Disponible</option>
-              <option value="bajo-stock">Bajo Stock</option>
-              <option value="agotado">Agotado</option>
-              <option value="por-vencer">Por Vencer</option>
-              <option value="descontinuado">Descontinuado</option>
-            </select>
+          <div className="mt-4 flex items-center gap-3">
+            <input
+              id="descontinuado"
+              type="checkbox"
+              className="w-4 h-4 rounded border-input text-primary focus:ring-ring"
+              {...register('descontinuado')}
+            />
+
+            <div>
+              <label
+                htmlFor="descontinuado"
+                className="label-text mb-0 cursor-pointer"
+              >
+                Medicamento descontinuado
+              </label>
+
+              <p className="helper-text">
+                Marque esta opción únicamente si el medicamento ya no será comercializado.
+              </p>
+            </div>
           </div>
         </div>
 

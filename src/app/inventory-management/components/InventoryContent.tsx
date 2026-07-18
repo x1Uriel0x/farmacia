@@ -8,6 +8,25 @@ import InventoryTable from './InventoryTable';
 import ProductModal from './ProductModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
+const statusOptions = ['Todos', 'disponible', 'bajo-stock', 'agotado', 'por-vencer', 'vencidos', 'descontinuado'];
+
+const statusLabels: Record<string, string> = {
+  Todos: 'Todos los estados',
+  disponible: 'Disponible',
+  'bajo-stock': 'Bajo stock',
+  agotado: 'Agotado',
+  'por-vencer': 'Por vencer',
+  vencidos: 'Vencidos',
+  descontinuado: 'Descontinuado',
+};
+
+const alertFilterLabels: Record<string, string> = {
+  'bajo-stock': 'productos con bajo stock',
+  agotado: 'productos agotados',
+  'por-vencer': 'productos por vencer',
+  vencidos: 'productos vencidos',
+};
+
 export default function InventoryContent() {
   const [productosList, setProductosList] = useState<Producto[]>([]);
   const [search, setSearch] = useState('');
@@ -63,6 +82,14 @@ const cargarProductos = async () => {
 
         setRol(String(datos.rol).toLowerCase());
       }
+
+      const params = new URLSearchParams(window.location.search);
+      const estado = params.get('estado');
+
+      if (estado && statusOptions.includes(estado)) {
+        setSelectedStatus(estado);
+        setCurrentPage(1);
+      }
     }, []);
 
 
@@ -74,7 +101,10 @@ const cargarProductos = async () => {
         p.sku.toLowerCase().includes(search.toLowerCase()) ||
         p.laboratorio.toLowerCase().includes(search.toLowerCase());
       const matchCategoria = selectedCategoria === 'Todas' || p.categoria === selectedCategoria;
-      const matchStatus = selectedStatus === 'Todos' || p.status === selectedStatus;
+      const isExpired = new Date(`${p.fechaVencimiento}T00:00:00`) < new Date(new Date().toDateString());
+      const matchStatus =
+        selectedStatus === 'Todos' ||
+        (selectedStatus === 'vencidos' ? isExpired : p.status === selectedStatus);
       return matchSearch && matchCategoria && matchStatus;
     });
   }, [productosList, search, selectedCategoria, selectedStatus]);
@@ -223,6 +253,16 @@ const cargarProductos = async () => {
       setSelectedIds(new Set(paginated.map((p) => p.id)));
     }
   };
+
+  const applyStatusFilter = (status: string) => {
+    setSelectedStatus(status);
+    setCurrentPage(1);
+    window.history.replaceState(
+      null,
+      '',
+      status === 'Todos' ? '/inventory-management' : `/inventory-management?estado=${status}`
+    );
+  };
 console.log("ROL EN EL COMPONENTE:", rol);
   return (
     <div className="space-y-5">
@@ -281,6 +321,21 @@ console.log("ROL EN EL COMPONENTE:", rol);
 
       {/* Filtrar */}
       <div className="card p-4">
+        {selectedStatus !== 'Todos' && (
+          <div className="mb-3 flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-primary">
+              Mostrando {alertFilterLabels[selectedStatus] ?? statusLabels[selectedStatus].toLowerCase()}
+            </p>
+            <button
+              type="button"
+              onClick={() => applyStatusFilter('Todos')}
+              className="self-start text-xs font-semibold text-primary underline underline-offset-2 hover:no-underline sm:self-auto"
+            >
+              Quitar filtro
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,12 +360,12 @@ console.log("ROL EN EL COMPONENTE:", rol);
           </select>
           <select
             value={selectedStatus}
-            onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => applyStatusFilter(e.target.value)}
             className="input-field sm:w-44"
           >
-            {['Todos', 'disponible', 'bajo-stock', 'agotado', 'por-vencer', 'descontinuado'].map((s) => (
+            {statusOptions.map((s) => (
               <option key={`status-opt-${s}`} value={s}>
-                {s === 'Todos' ? 'Todos los estados' : s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' ')}
+                {statusLabels[s]}
               </option>
             ))}
           </select>

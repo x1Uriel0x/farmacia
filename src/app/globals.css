@@ -3,42 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 24% 97%;
-  --foreground: 222 47% 9%;
+  --background: 166 43% 97%;
+  --foreground: 205 56% 12%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 205 56% 12%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 205 56% 12%;
 
-  --primary: 189 94% 34%;
+  --primary: 166 82% 31%;
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 210 22% 93%;
-  --secondary-foreground: 215 25% 27%;
+  --secondary: 174 39% 92%;
+  --secondary-foreground: 180 54% 20%;
 
-  --muted: 210 28% 94%;
-  --muted-foreground: 215 18% 41%;
+  --muted: 173 32% 94%;
+  --muted-foreground: 201 27% 38%;
 
-  --accent: 43 96% 48%;
-  --accent-foreground: 222 47% 9%;
+  --accent: 196 80% 43%;
+  --accent-foreground: 210 40% 98%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214 24% 86%;
-  --input: 214 24% 86%;
-  --ring: 189 94% 34%;
+  --border: 174 30% 84%;
+  --input: 174 30% 84%;
+  --ring: 166 82% 31%;
 
-  --success: 158 64% 36%;
-  --success-bg: 151 81% 96%;
-  --warning: 32 95% 44%;
-  --warning-bg: 48 100% 96%;
+  --success: 151 68% 35%;
+  --success-bg: 148 60% 94%;
+  --warning: 38 92% 45%;
+  --warning-bg: 43 94% 94%;
   --danger: 0 72% 51%;
   --danger-bg: 0 86% 97%;
-  --info: 217 91% 48%;
-  --info-bg: 214 100% 97%;
+  --info: 199 89% 42%;
+  --info-bg: 198 89% 95%;
 }
 
 body {
@@ -120,6 +120,10 @@ body {
   .badge-por-vencer {
     @apply inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground;
   }
+
+  .badge-vencido {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-200 text-red-900 border border-red-400;
+}
 
   .badge-descontinuado {
     @apply inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground;

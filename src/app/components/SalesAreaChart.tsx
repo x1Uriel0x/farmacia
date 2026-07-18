@@ -11,9 +11,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-const chartColor = '#0f9b8e';
-const gridColor = '#dbe6ef';
-const axisColor = '#526b88';
+const chartColor = '#0f9f89';
+const gridColor = '#d7ebe7';
+const axisColor = '#45687a';
 
 interface VentaDiaria {
   dia: string;

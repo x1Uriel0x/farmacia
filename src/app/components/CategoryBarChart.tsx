@@ -18,16 +18,16 @@ interface CategoriaStock {
 }
 
 const barColors = [
-  '#0f9b8e',
+  '#0f9f89',
+  '#0284c7',
+  '#22c55e',
   '#f59e0b',
-  '#16a34a',
-  '#d97706',
-  '#dc2626',
+  '#ef4444',
   '#2563eb',
 ];
 
-const gridColor = '#dbe6ef';
-const axisColor = '#526b88';
+const gridColor = '#d7ebe7';
+const axisColor = '#45687a';
 
 interface TooltipProps {
   active?: boolean;

@@ -16,7 +16,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Panel Principal</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Domingo, 17 de mayo de 2026 — Farmacia Central
+               Farmacia Central
             </p>
           </div>
           <div className="flex items-center gap-2">

@@ -22,45 +22,45 @@ const colorMap: Record<
   }
 > = {
   teal: {
-    accent: 'bg-[#0f9b8e]',
-    icon: 'bg-[#0f9b8e] text-white',
-    value: 'text-[#0f766e]',
-    ring: 'group-hover:border-[#0f9b8e]/50 group-hover:shadow-[#0f9b8e]/10',
+    accent: 'bg-[#0f9f89]',
+    icon: 'bg-[#0f9f89] text-white',
+    value: 'text-[#0b7f70]',
+    ring: 'group-hover:border-[#0f9f89]/50 group-hover:shadow-[#0f9f89]/15',
     badge: 'text-success',
   },
   blue: {
-    accent: 'bg-[#2563eb]',
-    icon: 'bg-[#2563eb] text-white',
-    value: 'text-[#1d4ed8]',
-    ring: 'group-hover:border-[#2563eb]/50 group-hover:shadow-[#2563eb]/10',
+    accent: 'bg-[#0284c7]',
+    icon: 'bg-[#0284c7] text-white',
+    value: 'text-[#0369a1]',
+    ring: 'group-hover:border-[#0284c7]/50 group-hover:shadow-[#0284c7]/15',
     badge: 'text-success',
   },
   orange: {
-    accent: 'bg-[#f59e0b]',
-    icon: 'bg-[#f59e0b] text-white',
-    value: 'text-[#d97706]',
-    ring: 'group-hover:border-[#f59e0b]/50 group-hover:shadow-[#f59e0b]/10',
-    badge: 'text-danger',
+    accent: 'bg-[#14b8a6]',
+    icon: 'bg-[#14b8a6] text-white',
+    value: 'text-[#0f766e]',
+    ring: 'group-hover:border-[#14b8a6]/50 group-hover:shadow-[#14b8a6]/15',
+    badge: 'text-success',
   },
   amber: {
-    accent: 'bg-[#d97706]',
-    icon: 'bg-[#d97706] text-white',
+    accent: 'bg-[#f59e0b]',
+    icon: 'bg-[#f59e0b] text-white',
     value: 'text-[#b45309]',
-    ring: 'group-hover:border-[#d97706]/50 group-hover:shadow-[#d97706]/10',
+    ring: 'group-hover:border-[#f59e0b]/50 group-hover:shadow-[#f59e0b]/15',
     badge: 'text-warning',
   },
   red: {
-    accent: 'bg-[#dc2626]',
-    icon: 'bg-[#dc2626] text-white',
-    value: 'text-[#b91c1c]',
-    ring: 'group-hover:border-[#dc2626]/50 group-hover:shadow-[#dc2626]/10',
+    accent: 'bg-[#ef4444]',
+    icon: 'bg-[#ef4444] text-white',
+    value: 'text-[#dc2626]',
+    ring: 'group-hover:border-[#ef4444]/50 group-hover:shadow-[#ef4444]/15',
     badge: 'text-danger',
   },
   green: {
-    accent: 'bg-[#16a34a]',
-    icon: 'bg-[#16a34a] text-white',
+    accent: 'bg-[#22c55e]',
+    icon: 'bg-[#22c55e] text-white',
     value: 'text-[#15803d]',
-    ring: 'group-hover:border-[#16a34a]/50 group-hover:shadow-[#16a34a]/10',
+    ring: 'group-hover:border-[#22c55e]/50 group-hover:shadow-[#22c55e]/15',
     badge: 'text-success',
   },
 };
@@ -170,7 +170,7 @@ export default function DashboardMetrics() {
         return (
           <div
             key={metric.id}
-            className={`card group relative overflow-hidden border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${colors.ring} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2' : ''}`}
+            className={`card group relative overflow-hidden border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${colors.ring} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2 bg-gradient-to-br from-emerald-50 to-cyan-50' : ''}`}
           >
             <span
               className={`absolute inset-x-0 top-0 h-1 ${colors.accent}`}

@@ -71,8 +71,8 @@ module.exports = {
         },
       },
       boxShadow: {
-        dropdown: "0 14px 35px -18px rgb(15 23 42 / 0.35)",
-        modal: "0 28px 70px -24px rgb(15 23 42 / 0.45)",
+        dropdown: "0 14px 35px -18px rgb(15 118 110 / 0.35)",
+        modal: "0 28px 70px -24px rgb(15 118 110 / 0.45)",
       },
     },
   },
