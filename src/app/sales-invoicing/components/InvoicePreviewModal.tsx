@@ -1,10 +1,16 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { Printer, Download, X, CheckCircle } from 'lucide-react';
 import { type CartItem, type ClienteInfo, type FormaPago, IVA_RATE } from './salesData';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+type JsPdfWithAutoTable = jsPDF & {
+  lastAutoTable: {
+    finalY: number;
+  };
+};
 
 interface InvoicePreviewModalProps {
   open: boolean;
@@ -18,6 +24,11 @@ interface InvoicePreviewModalProps {
   subtotalNeto: number;
   ivaAmount: number;
   total: number;
+  usuario: {
+    id: string | null;
+    nombre: string;
+    rol: string;
+  };
 }
 
 const formaPagoLabel: Record<FormaPago, string> = {
@@ -41,6 +52,19 @@ function formatDate(date: Date): string {
   return `${d}/${m}/${y} ${h}:${min}`;
 }
 
+function money(value: number): string {
+  return `$${value.toFixed(2)}`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 export default function InvoicePreviewModal({
   open,
   onClose,
@@ -53,11 +77,132 @@ export default function InvoicePreviewModal({
   subtotalNeto,
   ivaAmount,
   total,
+  usuario,
 }: InvoicePreviewModalProps) {
-  const printRef = useRef<HTMLDivElement>(null);
   const issuedAt = formatDate(new Date());
 
   const handlePrint = () => {
+    const rows = cart.map((item) => {
+      const lineTotal = item.precioUnitario * item.cantidad;
+      const descuento = lineTotal * (item.descuento / 100);
+      const subtotal = lineTotal - descuento;
+
+      return `
+        <tr>
+          <td colspan="4" class="item-name">${escapeHtml(item.nombre)}</td>
+        </tr>
+        <tr>
+          <td class="muted">${escapeHtml(item.sku)}</td>
+          <td class="num">${item.cantidad}</td>
+          <td class="num">${money(item.precioUnitario)}</td>
+          <td class="num">${money(subtotal)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const win = window.open('', '_blank', 'width=360,height=700');
+    if (!win) return;
+
+    win.document.write(`
+      <!doctype html>
+      <html lang="es">
+        <head>
+          <meta charset="utf-8" />
+          <title>Factura ${escapeHtml(invoiceNumber)} - PharmaControl</title>
+          <style>
+            @page { size: 80mm auto; margin: 3mm; }
+            * { box-sizing: border-box; }
+            body {
+              width: 74mm;
+              margin: 0 auto;
+              color: #111827;
+              font-family: Arial, "Helvetica Neue", sans-serif;
+              font-size: 11px;
+              line-height: 1.25;
+            }
+            .ticket { width: 100%; }
+            .center { text-align: center; }
+            .right, .num { text-align: right; }
+            .brand { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+            .muted { color: #4b5563; font-size: 10px; }
+            .line { border-top: 1px dashed #111827; margin: 8px 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th { border-bottom: 1px solid #111827; font-size: 10px; padding: 3px 0; text-align: left; }
+            td { padding: 2px 0; vertical-align: top; }
+            .item-name { font-weight: 700; padding-top: 6px; }
+            .totals td { padding: 2px 0; }
+            .total-row td { border-top: 1px solid #111827; font-size: 14px; font-weight: 700; padding-top: 5px; }
+            .footer { margin-top: 10px; text-align: center; font-size: 10px; }
+            @media print { html, body { width: 80mm; } }
+          </style>
+        </head>
+        <body>
+          <main class="ticket">
+            <div class="center">
+              <div class="brand">PharmaControl</div>
+              <div>Farmacia Central</div>
+              <div>RUC: 1790012345001</div>
+              <div>Av. Amazonas N24-03, Quito</div>
+              <div>Tel: (02) 234-5678</div>
+            </div>
+
+            <div class="line"></div>
+
+            <table>
+              <tbody>
+                <tr><td>Factura:</td><td class="right">${escapeHtml(invoiceNumber)}</td></tr>
+                <tr><td>Fecha:</td><td class="right">${escapeHtml(issuedAt)}</td></tr>
+                <tr><td>Cliente:</td><td class="right">${escapeHtml(cliente.nombre || 'Consumidor Final')}</td></tr>
+                <tr><td>${escapeHtml(tipoIdLabel[cliente.tipoIdentificacion] ?? 'ID')}:</td><td class="right">${escapeHtml(cliente.identificacion || '9999999999')}</td></tr>
+                <tr><td>Pago:</td><td class="right">${escapeHtml(formaPagoLabel[formaPago])}</td></tr>
+                <tr><td>Vendedor:</td><td class="right">${escapeHtml(usuario.nombre)}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="line"></div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="num">Cant.</th>
+                  <th class="num">P.U.</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+
+            <div class="line"></div>
+
+            <table class="totals">
+              <tbody>
+                <tr><td>Subtotal bruto</td><td class="right">${money(subtotalBruto)}</td></tr>
+                ${descuentoGlobalAmount > 0 ? `<tr><td>Descuento</td><td class="right">-${money(descuentoGlobalAmount)}</td></tr>` : ''}
+                <tr><td>Subtotal neto</td><td class="right">${money(subtotalNeto)}</td></tr>
+                <tr><td>IVA ${(IVA_RATE * 100).toFixed(0)}%</td><td class="right">${money(ivaAmount)}</td></tr>
+                <tr class="total-row"><td>TOTAL</td><td class="right">${money(total)}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="line"></div>
+
+            <div class="footer">
+              <div>Gracias por su compra</div>
+              <div>Documento valido como comprobante de pago</div>
+              <div class="muted">Ambiente de pruebas</div>
+            </div>
+          </main>
+          <script>
+            window.addEventListener('load', () => window.print());
+          </script>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    return;
+
+    /*
     if (!printRef.current) return;
     const content = printRef.current.innerHTML;
     const win = window.open('', '_blank', 'width=800,height=700');
@@ -82,6 +227,7 @@ export default function InvoicePreviewModal({
     `);
     win.document.close();
     win.print();
+    */
   };
 const handleDownloadPDF = () => {
 
@@ -109,10 +255,6 @@ const handleDownloadPDF = () => {
     `Forma de pago: ${formaPagoLabel[formaPago]}`,
     14,
     61
-  );
-
-  const usuario = JSON.parse(
-    sessionStorage.getItem("usuario") || "{}"
   );
 
   doc.text(
@@ -157,7 +299,7 @@ const handleDownloadPDF = () => {
 
   });
 
-  let y = (doc as any).lastAutoTable.finalY + 12;
+  let y = (doc as JsPdfWithAutoTable).lastAutoTable.finalY + 12;
 
   doc.text(
     `Subtotal: $${subtotalBruto.toFixed(2)}`,
@@ -256,7 +398,7 @@ const handleDownloadPDF = () => {
 
         {/* Invoice content */}
         <div className="overflow-y-auto max-h-[70vh] px-6 py-5">
-          <div ref={printRef}>
+          <div>
             {/* Invoice header */}
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -300,7 +442,7 @@ const handleDownloadPDF = () => {
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pago</p>
                 <p className="text-sm font-medium text-foreground">{formaPagoLabel[formaPago]}</p>
-                <p className="text-xs text-muted-foreground">Vendedor: María Sánchez</p>
+                <p className="text-xs text-muted-foreground">Vendedor: {usuario.nombre}</p>
                 <p className="text-xs text-muted-foreground">Caja: 01</p>
               </div>
             </div>

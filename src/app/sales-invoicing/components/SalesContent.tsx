@@ -15,6 +15,49 @@ function generateInvoiceNumber(): string {
   return `F-2026-0${invoiceCounter}`;
 }
 
+type CurrentUser = {
+  id: string | null;
+  nombre: string;
+  rol: string;
+};
+
+function getCurrentUser(): CurrentUser {
+  try {
+    const data = JSON.parse(sessionStorage.getItem('usuario') || '{}') as Record<string, unknown>;
+
+    return {
+      id: data.id || data.id_usuario || data.usuario_id
+        ? String(data.id ?? data.id_usuario ?? data.usuario_id)
+        : null,
+      nombre: String(data.nombre ?? data.name ?? data.usuario ?? 'Usuario'),
+      rol: String(data.rol ?? data.role ?? ''),
+    };
+  } catch {
+    return {
+      id: null,
+      nombre: 'Usuario',
+      rol: '',
+    };
+  }
+}
+
+async function readVentaResponse(response: Response) {
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text) as {
+      success?: boolean;
+      message?: string;
+      error?: string;
+    };
+  } catch {
+    return {
+      success: false,
+      message: text || `Error del servidor (${response.status})`,
+    };
+  }
+}
+
 export default function SalesContent() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cliente, setCliente] = useState<ClienteInfo>({
@@ -116,6 +159,7 @@ export default function SalesContent() {
 
   try {
     setIsEmitting(true);
+    const usuarioActual = getCurrentUser();
 
     const response = await fetch(
       'http://localhost/farmacia-api/crear_venta.php',
@@ -132,15 +176,18 @@ export default function SalesContent() {
           total: total,
           forma_pago: formaPago,
           productos: cart,
-          usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre,
+          usuario_id: usuarioActual.id,
+          usuario: usuarioActual.nombre,
+          usuario_nombre: usuarioActual.nombre,
+          usuario_rol: usuarioActual.rol,
         })
       }
     );
 
-    const result = await response.json();
+    const result = await readVentaResponse(response);
 
-    if (!result.success) {
-      toast.error('Error al registrar la venta');
+    if (!response.ok || !result.success) {
+      toast.error(result.message || result.error || 'Error al registrar la venta');
       return;
     }
 
@@ -233,6 +280,7 @@ export default function SalesContent() {
         subtotalNeto={subtotalNeto}
         ivaAmount={ivaAmount}
         total={total}
+        usuario={getCurrentUser()}
       />
     </div>
   );

@@ -3,42 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --background: 166 43% 97%;
-  --foreground: 205 56% 12%;
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
 
   --card: 0 0% 100%;
-  --card-foreground: 205 56% 12%;
+  --card-foreground: 222 47% 11%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 205 56% 12%;
+  --popover-foreground: 222 47% 11%;
 
-  --primary: 166 82% 31%;
+  --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 174 39% 92%;
-  --secondary-foreground: 180 54% 20%;
+  --secondary: 214 32% 91%;
+  --secondary-foreground: 222 47% 11%;
 
-  --muted: 173 32% 94%;
-  --muted-foreground: 201 27% 38%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  --accent: 196 80% 43%;
+  --accent: 188 95% 43%;
   --accent-foreground: 210 40% 98%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 174 30% 84%;
-  --input: 174 30% 84%;
-  --ring: 166 82% 31%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
 
-  --success: 151 68% 35%;
-  --success-bg: 148 60% 94%;
+  --success: 160 84% 39%;
+  --success-bg: 156 72% 95%;
   --warning: 38 92% 45%;
   --warning-bg: 43 94% 94%;
   --danger: 0 72% 51%;
   --danger-bg: 0 86% 97%;
-  --info: 199 89% 42%;
-  --info-bg: 198 89% 95%;
+  --info: 188 95% 43%;
+  --info-bg: 189 94% 95%;
 }
 
 body {
@@ -74,7 +74,7 @@ body {
   }
 
   .btn-primary {
-    @apply rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-all duration-150 hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+    @apply rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-all duration-150 hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
   }
 
   .btn-secondary {
@@ -130,11 +130,11 @@ body {
   }
 
   .nav-item {
-    @apply flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground;
+    @apply flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-blue-100 transition-all duration-150 hover:bg-white/10 hover:text-white;
   }
 
   .nav-item-active {
-    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground hover:opacity-90;
+    @apply bg-[#2563EB] text-white hover:bg-[#1D4ED8] hover:text-white;
   }
 
   .table-header {

@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
 import { type Producto, categorias } from './inventoryData';
 
-type ProductFormData = {
+export type ProductFormData = {
   sku: string;
   nombre: string;
   laboratorio: string;
@@ -24,7 +24,7 @@ interface ProductModalProps {
   open: boolean;
   onClose: () => void;
   product: Producto | null;
-  onSave: (data: ProductFormData) => void;
+  onSave: (data: ProductFormData) => Promise<void>;
 }
 
 export default function ProductModal({ open, onClose, product, onSave }: ProductModalProps) {
@@ -92,8 +92,7 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
 
   // Backend integration point: POST /api/productos or PUT /api/productos/:id
   const onSubmit = async (data: ProductFormData) => {
-    await new Promise((r) => setTimeout(r, 500));
-    onSave(data);
+    await onSave(data);
   };
 
   return (

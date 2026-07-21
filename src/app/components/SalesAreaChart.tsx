@@ -10,15 +10,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { normalizeVentasDiarias, type VentaDiaria } from './dashboardData';
 
-const chartColor = '#0f9f89';
-const gridColor = '#d7ebe7';
-const axisColor = '#45687a';
-
-interface VentaDiaria {
-  dia: string;
-  ventas: number;
-}
+const chartColor = '#2563EB';
+const gridColor = '#E2E8F0';
+const axisColor = '#64748B';
 
 interface TooltipProps {
   active?: boolean;
@@ -43,22 +39,22 @@ export default function SalesAreaChart() {
   const [data, setData] = useState<VentaDiaria[]>([]);
 
   useEffect(() => {
-    cargarVentas();
+    const cargarVentas = async () => {
+      try {
+        const response = await fetch(
+          'http://localhost/farmacia-api/ventas_diarias.php'
+        );
+
+        const datos = await response.json();
+
+        setData(normalizeVentasDiarias(datos));
+      } catch (error) {
+        console.error('Error al cargar ventas diarias:', error);
+      }
+    };
+
+    void cargarVentas();
   }, []);
-
-  const cargarVentas = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost/farmacia-api/ventas_diarias.php'
-      );
-
-      const datos = await response.json();
-
-      setData(datos);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   return (
     <ResponsiveContainer width="100%" height={220}>

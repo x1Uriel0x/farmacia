@@ -10,6 +10,7 @@ import {
   FileText,
   ShoppingBag,
 } from 'lucide-react';
+import { normalizeMetricas, type DashboardMetricas } from './dashboardData';
 
 const colorMap: Record<
   string,
@@ -22,24 +23,24 @@ const colorMap: Record<
   }
 > = {
   teal: {
-    accent: 'bg-[#0f9f89]',
-    icon: 'bg-[#0f9f89] text-white',
-    value: 'text-[#0b7f70]',
-    ring: 'group-hover:border-[#0f9f89]/50 group-hover:shadow-[#0f9f89]/15',
+    accent: 'bg-[#2563EB]',
+    icon: 'bg-[#2563EB] text-white',
+    value: 'text-[#1D4ED8]',
+    ring: 'group-hover:border-[#2563EB]/50 group-hover:shadow-[#2563EB]/15',
     badge: 'text-success',
   },
   blue: {
-    accent: 'bg-[#0284c7]',
-    icon: 'bg-[#0284c7] text-white',
-    value: 'text-[#0369a1]',
-    ring: 'group-hover:border-[#0284c7]/50 group-hover:shadow-[#0284c7]/15',
+    accent: 'bg-[#06B6D4]',
+    icon: 'bg-[#06B6D4] text-white',
+    value: 'text-[#0891B2]',
+    ring: 'group-hover:border-[#06B6D4]/50 group-hover:shadow-[#06B6D4]/15',
     badge: 'text-success',
   },
   orange: {
-    accent: 'bg-[#14b8a6]',
-    icon: 'bg-[#14b8a6] text-white',
-    value: 'text-[#0f766e]',
-    ring: 'group-hover:border-[#14b8a6]/50 group-hover:shadow-[#14b8a6]/15',
+    accent: 'bg-[#1E3A8A]',
+    icon: 'bg-[#1E3A8A] text-white',
+    value: 'text-[#1E3A8A]',
+    ring: 'group-hover:border-[#1E3A8A]/40 group-hover:shadow-[#1E3A8A]/15',
     badge: 'text-success',
   },
   amber: {
@@ -57,41 +58,43 @@ const colorMap: Record<
     badge: 'text-danger',
   },
   green: {
-    accent: 'bg-[#22c55e]',
-    icon: 'bg-[#22c55e] text-white',
-    value: 'text-[#15803d]',
-    ring: 'group-hover:border-[#22c55e]/50 group-hover:shadow-[#22c55e]/15',
+    accent: 'bg-[#10B981]',
+    icon: 'bg-[#10B981] text-white',
+    value: 'text-[#059669]',
+    ring: 'group-hover:border-[#10B981]/50 group-hover:shadow-[#10B981]/15',
     badge: 'text-success',
   },
 };
 
 export default function DashboardMetrics() {
-  const [metricas, setMetricas] = useState({
+  const [metricas, setMetricas] = useState<DashboardMetricas>({
     ventasDia: 0,
     facturasHoy: 0,
     unidadesVendidas: 0,
     bajoStock: 0,
+    stockAgotado: 0,
     porVencer: 0,
+    vencidos: 0,
     valorInventario: 0,
   });
 
   useEffect(() => {
-    cargarMetricas();
+    const cargarMetricas = async () => {
+      try {
+        const response = await fetch(
+          'http://localhost/farmacia-api/dashboard_metricas.php'
+        );
+
+        const data = await response.json();
+
+        setMetricas(normalizeMetricas(data));
+      } catch (error) {
+        console.error('Error al cargar metricas del dashboard:', error);
+      }
+    };
+
+    void cargarMetricas();
   }, []);
-
-  const cargarMetricas = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost/farmacia-api/dashboard_metricas.php'
-      );
-
-      const data = await response.json();
-
-      setMetricas(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const metrics = [
     {
@@ -170,7 +173,7 @@ export default function DashboardMetrics() {
         return (
           <div
             key={metric.id}
-            className={`card group relative overflow-hidden border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${colors.ring} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2 bg-gradient-to-br from-emerald-50 to-cyan-50' : ''}`}
+            className={`card group relative overflow-hidden border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${colors.ring} ${metric.colSpan} ${metric.hero ? 'lg:col-span-2 bg-gradient-to-br from-blue-50 to-cyan-50' : ''}`}
           >
             <span
               className={`absolute inset-x-0 top-0 h-1 ${colors.accent}`}

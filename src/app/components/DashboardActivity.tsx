@@ -6,37 +6,30 @@ import {ShoppingCart,
   Pencil,
   Trash2,
 } from 'lucide-react';
-
-interface Actividad {
-  id: number;
-  tipo: string;
-  titulo: string;
-  descripcion: string;
-  usuario: string;
-  fecha: string;
-}
+import { normalizeActividades, type Actividad } from './dashboardData';
+import type { BadgeVariant } from '../../components/ui/Badge';
 
 export default function DashboardActivity() {
   const [activities, setActivities] = useState<Actividad[]>([]);
 
   useEffect(() => {
-    cargarActividades();
+    const cargarActividades = async () => {
+      try {
+        const response = await fetch(
+          'http://localhost/farmacia-api/actividad.php'
+        );
+
+        const data = await response.json();
+
+        setActivities(normalizeActividades(data));
+
+      } catch (error) {
+        console.error('Error al cargar actividad reciente:', error);
+      }
+    };
+
+    void cargarActividades();
   }, []);
-
-  const cargarActividades = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost/farmacia-api/actividad.php'
-      );
-
-      const data = await response.json();
-
-      setActivities(data);
-
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const obtenerIcono = (tipo: string) => {
     switch (tipo) {
@@ -99,7 +92,7 @@ export default function DashboardActivity() {
     return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
   };
 
-  const obtenerBadge = (tipo: string) => {
+  const obtenerBadge = (tipo: string): { variant: BadgeVariant; label: string } => {
   switch (tipo) {
 
     case 'factura':
@@ -177,7 +170,7 @@ export default function DashboardActivity() {
                         </p>
 
                         <Badge
-                          variant={obtenerBadge(item.tipo).variant as any}
+                          variant={obtenerBadge(item.tipo).variant}
                           label={obtenerBadge(item.tipo).label}
                         />
                       </div>

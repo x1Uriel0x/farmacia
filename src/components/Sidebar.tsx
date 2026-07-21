@@ -8,6 +8,8 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  ReceiptText,
+  UserCog,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -30,6 +32,7 @@ interface NavItem {
   icon: React.ReactNode;
   badge?: number;
   group: string;
+  roles?: string[];
 }
 
 const navItems: NavItem[] = [
@@ -45,7 +48,6 @@ const navItems: NavItem[] = [
     label: 'Inventario',
     href: '/inventory-management',
     icon: <Package size={18} />,
-    badge: 3,
     group: 'operaciones',
   },
   {
@@ -55,25 +57,48 @@ const navItems: NavItem[] = [
     icon: <ShoppingCart size={18} />,
     group: 'operaciones',
   },
+  {
+    id: 'nav-sales-history',
+    label: 'Historial de Ventas',
+    href: '/sales-history',
+    icon: <ReceiptText size={18} />,
+    group: 'operaciones',
+    roles: ['admin', 'vendedor'],
+  },
+  {
+    id: 'nav-users',
+    label: 'Usuarios',
+    href: '/user-administration',
+    icon: <UserCog size={18} />,
+    group: 'administracion',
+    roles: ['admin'],
+  },
 ];
 
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }: SidebarProps) {
   const [rol, setRol] = useState('');
+  const [nombreUsuario, setNombreUsuario] = useState('Farmacia');
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-    setRol(String(usuario.rol || '').toLowerCase());
+    queueMicrotask(() => {
+      const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+      setRol(String(usuario.rol || '').toLowerCase());
+      setNombreUsuario(String(usuario.nombre || usuario.usuario || usuario.email || usuario.correo || 'Farmacia'));
+    });
   }, []);
 
-  const visibleNavItems = rol === 'consulta'
-    ? navItems.filter((item) => item.href !== '/sales-invoicing')
-    : navItems;
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.roles && !item.roles.includes(rol)) return false;
+    if (rol === 'consulta' && item.href === '/sales-invoicing') return false;
+    return true;
+  });
 
   const groups = [
     { key: 'principal', label: 'Principal' },
     { key: 'operaciones', label: 'Operaciones' },
+    { key: 'administracion', label: 'Administracion' },
   ];
 
   const handleLogout = () => {
@@ -86,7 +111,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
     <>
       <aside
         className={`
-          hidden lg:flex flex-col bg-card border-r border-border sidebar-transition relative z-10
+          hidden lg:flex flex-col bg-[#1E3A8A] border-r border-[#1E3A8A] sidebar-transition relative z-10
           ${collapsed ? 'w-16' : 'w-60'}
         `}
       >
@@ -97,24 +122,25 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           navItems={visibleNavItems}
           groups={groups}
           rol={rol}
+          nombreUsuario={nombreUsuario}
           onLogout={handleLogout}
         />
       </aside>
 
       <aside
         className={`
-          lg:hidden fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border
+          lg:hidden fixed inset-y-0 left-0 z-30 w-64 bg-[#1E3A8A] border-r border-[#1E3A8A]
           transition-transform duration-300 ease-in-out flex flex-col
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <AppLogo size={32} />
-            <span className="font-semibold text-foreground text-sm">PharmaControl</span>
+            <span className="font-semibold text-white text-sm">PharmaControl</span>
           </div>
-          <button onClick={onMobileClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronLeft size={16} className="text-muted-foreground" />
+          <button onClick={onMobileClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <ChevronLeft size={16} className="text-blue-100" />
           </button>
         </div>
         <SidebarContent
@@ -124,6 +150,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           navItems={visibleNavItems}
           groups={groups}
           rol={rol}
+          nombreUsuario={nombreUsuario}
           isMobile
           onMobileClose={onMobileClose}
           onLogout={handleLogout}
@@ -140,6 +167,7 @@ interface SidebarContentProps {
   navItems: NavItem[];
   groups: { key: string; label: string }[];
   rol: string;
+  nombreUsuario: string;
   onLogout: () => void;
   isMobile?: boolean;
   onMobileClose?: () => void;
@@ -152,6 +180,7 @@ function SidebarContent({
   navItems,
   groups,
   rol,
+  nombreUsuario,
   onLogout,
   isMobile,
   onMobileClose,
@@ -163,21 +192,21 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {!isMobile && (
-        <div className={`flex items-center border-b border-border px-3 py-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        <div className={`flex items-center border-b border-white/10 px-3 py-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && (
             <div className="flex items-center gap-2">
               <AppLogo size={32} />
-              <span className="font-semibold text-foreground text-sm leading-tight">PharmaControl</span>
+              <span className="font-semibold text-white text-sm leading-tight">PharmaControl</span>
             </div>
           )}
           {collapsed && <AppLogo size={32} />}
           {!collapsed && (
             <button
               onClick={onToggleCollapse}
-              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
               aria-label="Colapsar sidebar"
             >
-              <ChevronLeft size={16} className="text-muted-foreground" />
+              <ChevronLeft size={16} className="text-blue-100" />
             </button>
           )}
         </div>
@@ -186,10 +215,10 @@ function SidebarContent({
       {collapsed && !isMobile && (
         <button
           onClick={onToggleCollapse}
-          className="mx-auto mt-2 p-1.5 rounded-lg hover:bg-muted transition-colors"
+          className="mx-auto mt-2 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           aria-label="Expandir sidebar"
         >
-          <ChevronRight size={16} className="text-muted-foreground" />
+          <ChevronRight size={16} className="text-blue-100" />
         </button>
       )}
 
@@ -201,11 +230,11 @@ function SidebarContent({
           return (
             <div key={`group-${group.key}`} className="mb-4">
               {!collapsed && (
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1.5">
+                <p className="text-xs font-semibold text-blue-100/80 uppercase tracking-wider px-3 mb-1.5">
                   {group.label}
                 </p>
               )}
-              {collapsed && <div className="border-t border-border mx-2 mb-2" />}
+              {collapsed && <div className="border-t border-white/10 mx-2 mb-2" />}
               {groupItems.map((item) => {
                 const isActive = pathname === item.href;
 
@@ -239,23 +268,27 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className={`border-t border-border px-2 py-3 ${collapsed ? 'flex flex-col items-center gap-2' : ''}`}>
+      <div className={`border-t border-white/10 px-2 py-3 ${collapsed ? 'flex flex-col items-center gap-2' : ''}`}>
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+            <Link
+              href="/profile"
+              onClick={isMobile ? onMobileClose : undefined}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#06B6D4] flex items-center justify-center flex-shrink-0">
                 <User size={14} className="text-primary-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">Farmacia</p>
-                <p className="text-xs text-muted-foreground truncate">{rolVisible}</p>
+                <p className="text-sm font-medium text-white truncate">{nombreUsuario}</p>
+                <p className="text-xs text-blue-100 truncate">{rolVisible}</p>
               </div>
-              <Bell size={14} className="text-muted-foreground flex-shrink-0" />
-            </div>
+              <Bell size={14} className="text-blue-100 flex-shrink-0" />
+            </Link>
             <button
               type="button"
               onClick={onLogout}
-              className="nav-item mt-1 w-full text-danger hover:bg-danger-bg hover:text-danger"
+              className="nav-item mt-1 w-full text-red-100 hover:bg-red-500/15 hover:text-white"
             >
               <LogOut size={16} />
               <span>Cerrar Sesion</span>
@@ -263,22 +296,24 @@ function SidebarContent({
           </>
         ) : (
           <>
-            <div
-              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer"
+            <Link
+              href="/profile"
+              onClick={isMobile ? onMobileClose : undefined}
+              className="w-8 h-8 rounded-full bg-[#06B6D4] flex items-center justify-center cursor-pointer"
               title={`Farmacia - ${rolVisible}`}
             >
               <User size={14} className="text-primary-foreground" />
-            </div>
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Configuracion">
-              <Settings size={16} className="text-muted-foreground" />
+            </Link>
+            <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Configuracion">
+              <Settings size={16} className="text-blue-100" />
             </button>
             <button
               type="button"
               onClick={onLogout}
-              className="p-2 rounded-lg hover:bg-danger-bg transition-colors"
+              className="p-2 rounded-lg hover:bg-red-500/15 transition-colors"
               title="Cerrar Sesion"
             >
-              <LogOut size={16} className="text-danger" />
+              <LogOut size={16} className="text-red-100" />
             </button>
           </>
         )}

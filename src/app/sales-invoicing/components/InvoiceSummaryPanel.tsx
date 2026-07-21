@@ -48,7 +48,6 @@ export default function InvoiceSummaryPanel({
     register,
     formState: { errors },
     trigger,
-    getValues,
   } = useForm<ClienteInfo>({
     defaultValues: cliente,
     mode: 'onChange',
@@ -60,8 +59,6 @@ export default function InvoiceSummaryPanel({
   };
 
   const handleEmitir = async () => {
-    const valid = await trigger();
-    if (!valid) return;
     onEmitir();
   };
 

@@ -5,8 +5,9 @@ import { Plus, AlertTriangle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { categorias, type Producto } from './inventoryData';
 import InventoryTable from './InventoryTable';
-import ProductModal from './ProductModal';
+import ProductModal, { ProductFormData } from './ProductModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import type { StockStatus } from './inventoryData';
 
 const statusOptions = ['Todos', 'disponible', 'bajo-stock', 'agotado', 'por-vencer', 'vencidos', 'descontinuado'];
 
@@ -26,6 +27,97 @@ const alertFilterLabels: Record<string, string> = {
   'por-vencer': 'productos por vencer',
   vencidos: 'productos vencidos',
 };
+
+type ApiResult = {
+  success?: boolean;
+  message?: string;
+  error?: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function unwrapArrayPayload(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (!isRecord(value)) return [];
+  const rows = value.data ?? value.productos ?? value.resultado;
+  return Array.isArray(rows) ? rows : [];
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function toBooleanNumber(value: unknown): 0 | 1 {
+  return value === true || value === 1 || value === '1' ? 1 : 0;
+}
+
+function calcularStatus(data: ProductFormData): StockStatus {
+  if (data.descontinuado) return 'descontinuado';
+  if (data.stockActual <= 0) return 'agotado';
+  if (data.stockActual <= data.stockMinimo) return 'bajo-stock';
+
+  const hoy = new Date(new Date().toDateString());
+  const vence = new Date(`${data.fechaVencimiento}T00:00:00`);
+  const diasParaVencer = Math.ceil((vence.getTime() - hoy.getTime()) / 86400000);
+
+  if (diasParaVencer >= 0 && diasParaVencer <= 30) return 'por-vencer';
+  return 'disponible';
+}
+
+function getCurrentUserName() {
+  try {
+    const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}') as Record<string, unknown>;
+    return String(usuario.nombre ?? usuario.usuario ?? usuario.email ?? 'Sistema');
+  } catch {
+    return 'Sistema';
+  }
+}
+
+function buildProductPayload(data: ProductFormData, id?: string) {
+  const status = calcularStatus(data);
+  const controlado = toBooleanNumber(data.controlado);
+  const descontinuado = toBooleanNumber(data.descontinuado);
+
+  return {
+    ...(id ? { id } : {}),
+    ...data,
+    status,
+    estado: status,
+    controlado,
+    descontinuado,
+    precioCompra: Number(data.precioCompra),
+    precioVenta: Number(data.precioVenta),
+    stockActual: Number(data.stockActual),
+    stockMinimo: Number(data.stockMinimo),
+    precio_compra: Number(data.precioCompra),
+    precio_venta: Number(data.precioVenta),
+    stock_actual: Number(data.stockActual),
+    stock_minimo: Number(data.stockMinimo),
+    fecha_vencimiento: data.fechaVencimiento,
+    usuario: getCurrentUserName(),
+  };
+}
+
+async function readApiResult(response: Response): Promise<ApiResult> {
+  const text = await response.text();
+  if (!text) return { success: response.ok };
+
+  try {
+    return JSON.parse(text) as ApiResult;
+  } catch {
+    return {
+      success: false,
+      message: text || `Error del servidor (${response.status})`,
+    };
+  }
+}
 
 export default function InventoryContent() {
   const [productosList, setProductosList] = useState<Producto[]>([]);
@@ -49,16 +141,26 @@ const cargarProductos = async () => {
       'http://localhost/farmacia-api/productos.php'
     );
 
-    const data = await response.json();
+    const data = unwrapArrayPayload(await response.json());
 
-    const productosFormateados = data.map((p: any) => ({
-      ...p,
-      precioCompra: Number(p.precioCompra),
-      precioVenta: Number(p.precioVenta),
-      stockActual: Number(p.stockActual),
-      stockMinimo: Number(p.stockMinimo),
-      controlado: Boolean(Number(p.controlado))
-    }));
+    const productosFormateados = data.map((p) => {
+      const row = isRecord(p) ? p : {};
+      return {
+      id: String(row.id ?? ''),
+      sku: String(row.sku ?? ''),
+      nombre: String(row.nombre ?? ''),
+      laboratorio: String(row.laboratorio ?? ''),
+      categoria: String(row.categoria ?? ''),
+      precioCompra: toNumber(row.precioCompra ?? row.precio_compra),
+      precioVenta: toNumber(row.precioVenta ?? row.precio_venta),
+      stockActual: toNumber(row.stockActual ?? row.stock_actual),
+      stockMinimo: toNumber(row.stockMinimo ?? row.stock_minimo),
+      fechaVencimiento: String(row.fechaVencimiento ?? row.fecha_vencimiento ?? ''),
+      lote: String(row.lote ?? ''),
+      status: String(row.status ?? row.estado ?? 'disponible') as StockStatus,
+      controlado: Boolean(toBooleanNumber(row.controlado)),
+    };
+    });
 
     setProductosList(productosFormateados);
 
@@ -68,28 +170,24 @@ const cargarProductos = async () => {
   }
 };
     useEffect(() => {
-      cargarProductos();
+      queueMicrotask(() => {
+        void cargarProductos();
 
-      const usuario = sessionStorage.getItem('usuario');
+        const usuario = sessionStorage.getItem('usuario');
 
-      console.log("SESSION STORAGE:", usuario);
+        if (usuario) {
+          const datos = JSON.parse(usuario);
+          setRol(String(datos.rol).toLowerCase());
+        }
 
-      if (usuario) {
-        const datos = JSON.parse(usuario);
+        const params = new URLSearchParams(window.location.search);
+        const estado = params.get('estado');
 
-        console.log("USUARIO:", datos);
-        console.log("ROL:", datos.rol);
-
-        setRol(String(datos.rol).toLowerCase());
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const estado = params.get('estado');
-
-      if (estado && statusOptions.includes(estado)) {
-        setSelectedStatus(estado);
-        setCurrentPage(1);
-      }
+        if (estado && statusOptions.includes(estado)) {
+          setSelectedStatus(estado);
+          setCurrentPage(1);
+        }
+      });
     }, []);
 
 
@@ -121,7 +219,7 @@ const cargarProductos = async () => {
     setDeleteTarget(product);
   };
 
- const handleSave = async (data: Omit<Producto, 'id'>) => {
+ const handleSave = async (data: ProductFormData) => {
 
   try {
 
@@ -139,7 +237,7 @@ const cargarProductos = async () => {
             body: JSON.stringify({
               id: editingProduct.id,
               ...data,
-              usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre
+              ...buildProductPayload(data, editingProduct.id)
           })
         }
       );
@@ -153,19 +251,16 @@ const cargarProductos = async () => {
        headers: {
        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-      ...data,
-      usuario: JSON.parse(sessionStorage.getItem('usuario') || '{}').nombre
-    })
+      body: JSON.stringify(buildProductPayload(data))
   }
 );
 
     }
 
-    const result = await response.json();
+    const result = await readApiResult(response);
 
-    if (!result.success) {
-      toast.error('Error al guardar producto');
+    if (!response.ok || !result.success) {
+      toast.error(result.message || result.error || 'Error al guardar producto');
       return;
     }
 
@@ -175,7 +270,7 @@ const cargarProductos = async () => {
         : `Producto "${data.nombre}" registrado correctamente`
     );
 
-    cargarProductos();
+    await cargarProductos();
 
     setIsModalOpen(false);
     setEditingProduct(null);
@@ -424,3 +519,4 @@ console.log("ROL EN EL COMPONENTE:", rol);
     </div>
   );
 }
+
