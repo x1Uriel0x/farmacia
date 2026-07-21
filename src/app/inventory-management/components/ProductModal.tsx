@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
-import { type Producto, categorias } from './inventoryData';
+import { type Producto } from './inventoryData';
 
 export type ProductFormData = {
   sku: string;
@@ -87,9 +87,45 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
     }
   }, [product, reset, open]);
 
+useEffect(() => {
+
+  const cargarCatalogos = async () => {
+
+    try {
+
+      const [catRes, labRes] = await Promise.all([
+        fetch("http://localhost/farmacia-api/obtener_categorias.php"),
+        fetch("http://localhost/farmacia-api/obtener_laboratorios.php")
+      ]);
+
+      const catData = await catRes.json();
+      const labData = await labRes.json();
+
+      if (catData.success) {
+        setCategoriasBD(catData.categorias);
+      }
+
+      if (labData.success) {
+        setLaboratoriosBD(labData.laboratorios);
+      }
+
+    } catch (error) {
+
+      console.error("Error cargando catálogos", error);
+
+    }
+
+  };
+
+  cargarCatalogos();
+
+}, []);
+
+
   const precioCompra = watch('precioCompra');
   const margen = precioCompra > 0 ? watch('precioVenta') / precioCompra : 0;
-
+  const [categoriasBD, setCategoriasBD] = React.useState<any[]>([]);
+  const [laboratoriosBD, setLaboratoriosBD] = React.useState<any[]>([]);
   // Backend integration point: POST /api/productos or PUT /api/productos/:id
   const onSubmit = async (data: ProductFormData) => {
     await onSave(data);
@@ -189,15 +225,26 @@ export default function ProductModal({ open, onClose, product, onSave }: Product
             </div>
             <div>
               <label htmlFor="categoria" className="label-text">Categoría</label>
-              <select
-                id="categoria"
+              <select 
+                id="laboratorio"
                 className="input-field"
-                {...register('categoria')}
-              >
-                {categorias.filter((c) => c !== 'Todas').map((c) => (
-                  <option key={`modal-cat-${c}`} value={c}>{c}</option>
-                ))}
-              </select>
+                {...register("laboratorio", {
+                  required: "El laboratorio es requerido"
+                })}>
+                <option value="">Seleccione...</option>
+
+                {laboratoriosBD.map((lab) => (
+
+                    <option
+                          key={lab.id}
+                          value={lab.nombre}
+                        >
+                          {lab.nombre}
+                      </option>
+
+                      ))}
+
+                    </select>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-3">

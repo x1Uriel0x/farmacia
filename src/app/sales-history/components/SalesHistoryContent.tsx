@@ -38,7 +38,7 @@ type CurrentUser = {
   rol: string;
 };
 
-const API_URL = 'http://localhost/farmacia-api/historial_ventas.php';
+const API_URL = 'http://localhost/farmacia-api/ventas_historial.php';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
