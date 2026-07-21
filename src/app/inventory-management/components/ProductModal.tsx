@@ -213,39 +213,58 @@ useEffect(() => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="laboratorio" className="label-text">Laboratorio</label>
-              <input
-                id="laboratorio"
-                type="text"
-                placeholder="Pharmabrand"
-                className={`input-field ${errors.laboratorio ? 'border-danger' : ''}`}
-                {...register('laboratorio', { required: 'El laboratorio es requerido' })}
-              />
-              {errors.laboratorio && <p className="error-text">{errors.laboratorio.message}</p>}
-            </div>
+  <label htmlFor="laboratorio" className="label-text">
+    Laboratorio
+  </label>
+
+  <select
+    id="laboratorio"
+    className="input-field"
+    {...register("laboratorio", {
+      required: "El laboratorio es requerido",
+    })}
+  >
+    <option value="">Seleccione...</option>
+
+    {laboratoriosBD.map((lab) => (
+      <option
+        key={lab.id}
+        value={lab.nombre}
+      >
+        {lab.nombre}
+      </option>
+    ))}
+  </select>
+</div>
             <div>
-              <label htmlFor="categoria" className="label-text">Categoría</label>
-              <select 
-                id="laboratorio"
-                className="input-field"
-                {...register("laboratorio", {
-                  required: "El laboratorio es requerido"
-                })}>
-                <option value="">Seleccione...</option>
+            <label htmlFor="categoria" className="label-text">
+              Categoría
+            </label>
 
-                {laboratoriosBD.map((lab) => (
+            <select
+              id="categoria"
+              className="input-field"
+              {...register("categoria", {
+                required: "La categoría es requerida"
+              })}
+            >
 
-                    <option
-                          key={lab.id}
-                          value={lab.nombre}
-                        >
-                          {lab.nombre}
-                      </option>
+              <option value="">Seleccione...</option>
 
-                      ))}
+              {categoriasBD.map((cat) => (
 
-                    </select>
-            </div>
+                <option
+                  key={cat.id}
+                  value={cat.nombre}
+                >
+                  {cat.nombre}
+                </option>
+
+              ))}
+
+            </select>
+
+          </div>
           </div>
           <div className="mt-4 flex items-center gap-3">
             <input

@@ -22,7 +22,7 @@ export const categorias = [
   'Todas',
   'Analgésicos',
   'Antibióticos',
-  'Vitaminas y Suplementos',
+  'Vitaminas',
   'Antiácidos',
   'Antihipertensivos',
   'Dermatología',
