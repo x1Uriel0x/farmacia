@@ -10,6 +10,9 @@ import {
   FileText,
   ShoppingBag,
 } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { getSessionUser, type SessionUser } from '../../lib/session';
+import { buildSellerMetrics, buildSalesParams } from '../../lib/salesMetrics';
 import { normalizeMetricas, type DashboardMetricas } from './dashboardData';
 
 const colorMap: Record<
@@ -67,7 +70,14 @@ const colorMap: Record<
 };
 
 export default function DashboardMetrics() {
+  const [user, setUser] = useState<SessionUser>({
+    id: '',
+    nombre: '',
+    usuario: '',
+    rol: '',
+  });
   const [metricas, setMetricas] = useState<DashboardMetricas>({
+    ventasTotales: 0,
     ventasDia: 0,
     facturasHoy: 0,
     unidadesVendidas: 0,
@@ -81,13 +91,18 @@ export default function DashboardMetrics() {
   useEffect(() => {
     const cargarMetricas = async () => {
       try {
-        const response = await fetch(
-          'http://localhost/farmacia-api/dashboard_metricas.php'
-        );
+        const sessionUser = getSessionUser();
+        setUser(sessionUser);
+
+        const params = buildSalesParams(sessionUser);
+        const endpoint = sessionUser.rol === 'vendedor'
+          ? `http://localhost/farmacia-api/ventas_historial.php?${params.toString()}`
+          : 'http://localhost/farmacia-api/dashboard_metricas.php';
+        const response = await fetch(endpoint);
 
         const data = await response.json();
 
-        setMetricas(normalizeMetricas(data));
+        setMetricas(sessionUser.rol === 'vendedor' ? buildSellerMetrics(data, sessionUser) : normalizeMetricas(data));
       } catch (error) {
         console.error('Error al cargar metricas del dashboard:', error);
       }
@@ -96,23 +111,37 @@ export default function DashboardMetrics() {
     void cargarMetricas();
   }, []);
 
+  const isSeller = user.rol === 'vendedor';
+  const isConsultation = user.rol === 'consulta';
+
   const metrics = [
-    {
-      id: 'metric-ventas-dia',
-      label: 'Ventas del Día',
-      value: `$${metricas.ventasDia.toFixed(2)}`,
-      change: 'Datos reales',
+    ...(isSeller ? [{
+      id: 'metric-ventas-totales',
+      label: 'Mis Ventas Totales',
+      value: formatCurrency(metricas.ventasTotales),
+      change: 'Solo tus facturas',
       trend: 'up',
       icon: <DollarSign size={20} />,
       color: 'teal',
       colSpan: 'col-span-1 md:col-span-2',
       hero: true,
+    }] : []),
+    {
+      id: 'metric-ventas-dia',
+      label: isSeller ? 'Mis Ventas del Día' : 'Ventas del Día',
+      value: formatCurrency(metricas.ventasDia),
+      change: isSeller ? 'Registradas por ti' : 'Datos reales',
+      trend: 'up',
+      icon: <DollarSign size={20} />,
+      color: 'teal',
+      colSpan: isSeller ? 'col-span-1' : 'col-span-1 md:col-span-2',
+      hero: !isSeller,
     },
     {
       id: 'metric-facturas-hoy',
-      label: 'Facturas Emitidas Hoy',
+      label: isSeller ? 'Mis Facturas Emitidas' : 'Facturas Emitidas Hoy',
       value: String(metricas.facturasHoy),
-      change: 'Datos reales',
+      change: isSeller ? 'Solo tus ventas' : 'Datos reales',
       trend: 'up',
       icon: <FileText size={20} />,
       color: 'blue',
@@ -121,16 +150,16 @@ export default function DashboardMetrics() {
     },
     {
       id: 'metric-unidades-vendidas',
-      label: 'Unidades Vendidas',
+      label: isSeller ? 'Mis Unidades Vendidas' : 'Unidades Vendidas',
       value: String(metricas.unidadesVendidas),
-      change: 'Datos reales',
+      change: isSeller ? 'Solo tus productos' : 'Datos reales',
       trend: 'up',
       icon: <ShoppingBag size={20} />,
       color: 'orange',
       colSpan: 'col-span-1',
       hero: false,
     },
-    {
+    ...(!isSeller && !isConsultation ? [{
       id: 'metric-bajo-stock',
       label: 'Bajo Stock',
       value: String(metricas.bajoStock),
@@ -143,7 +172,7 @@ export default function DashboardMetrics() {
     },
     {
       id: 'metric-por-vencer',
-      label: 'Por Vencer (30d)',
+      label: 'Por Vencer (15d)',
       value: String(metricas.porVencer),
       change: 'Lotes próximos a vencer',
       trend: 'alert',
@@ -155,14 +184,14 @@ export default function DashboardMetrics() {
     {
       id: 'metric-valor-inventario',
       label: 'Valor del Inventario',
-      value: `$${metricas.valorInventario.toFixed(2)}`,
+      value: formatCurrency(metricas.valorInventario),
       change: 'Calculado desde BD',
       trend: 'up',
       icon: <Package size={20} />,
       color: 'green',
       colSpan: 'col-span-1 md:col-span-2',
       hero: false,
-    },
+    }] : []),
   ];
 
   return (

@@ -1,4 +1,5 @@
 export type DashboardMetricas = {
+  ventasTotales: number;
   ventasDia: number;
   facturasHoy: number;
   unidadesVendidas: number;
@@ -29,6 +30,7 @@ export type Actividad = {
 };
 
 const emptyMetricas: DashboardMetricas = {
+  ventasTotales: 0,
   ventasDia: 0,
   facturasHoy: 0,
   unidadesVendidas: 0,
@@ -67,6 +69,7 @@ export function normalizeMetricas(payload: unknown): DashboardMetricas {
   if (!isRecord(data)) return emptyMetricas;
 
   return {
+    ventasTotales: toNumber(data.ventasTotales ?? data.ventas_totales ?? data.total_ventas),
     ventasDia: toNumber(data.ventasDia ?? data.ventas_dia ?? data.ventas_hoy ?? data.total_ventas_hoy),
     facturasHoy: toNumber(data.facturasHoy ?? data.facturas_hoy ?? data.ventas_count ?? data.total_facturas_hoy),
     unidadesVendidas: toNumber(data.unidadesVendidas ?? data.unidades_vendidas ?? data.productos_vendidos),

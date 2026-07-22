@@ -1,5 +1,7 @@
 'use client';
 
+import { formatCurrency } from '../../../lib/currency';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
@@ -123,9 +125,8 @@ function isOwnSale(venta: VentaHistorial, user: CurrentUser): boolean {
 }
 
 function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
-
 function formatDate(value: string): string {
   if (!value) return 'Sin fecha';
   const date = new Date(value.includes('T') ? value : value.replace(' ', 'T'));

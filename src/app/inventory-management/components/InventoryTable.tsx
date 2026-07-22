@@ -1,5 +1,7 @@
 'use client';
 
+import { formatCurrency } from '../../../lib/currency';
+
 import React, { useState } from 'react';
 import { Pencil, Trash2, Shield, ChevronUp, ChevronDown } from 'lucide-react';
 import Badge, { type BadgeVariant } from '../../../components/ui/Badge';
@@ -15,7 +17,7 @@ interface InventoryTableProps {
   onEdit: (p: Producto) => void;
   onDelete: (p: Producto) => void;
   totalItems: number;
-  rol : string;
+  rol: string;
   currentPage: number;
   totalPages: number;
   itemsPerPage: number;
@@ -25,6 +27,13 @@ interface InventoryTableProps {
 
 type SortKey = keyof Producto;
 
+type Column = {
+  key: SortKey;
+  label: string;
+  sortable?: boolean;
+  hiddenForConsulta?: boolean;
+};
+
 const statusLabel: Record<StockStatus, string> = {
   disponible: 'Disponible',
   'bajo-stock': 'Bajo Stock',
@@ -32,8 +41,21 @@ const statusLabel: Record<StockStatus, string> = {
   'por-vencer': 'Por Vencer',
   vencido: 'Vencido',
   descontinuado: 'Descontinuado',
-
 };
+
+const columns: Column[] = [
+  { key: 'sku', label: 'SKU', sortable: true },
+  { key: 'nombre', label: 'Medicamento', sortable: true },
+  { key: 'laboratorio', label: 'Laboratorio', sortable: true },
+  { key: 'categoria', label: 'Categoría', sortable: true },
+
+  { key: 'stockActual', label: 'Stock', sortable: true, hiddenForConsulta: true },
+  { key: 'precioCompra', label: 'P. Compra', sortable: true, hiddenForConsulta: true },
+  { key: 'precioVenta', label: 'P. Venta', sortable: true, hiddenForConsulta: true },
+  { key: 'fechaVencimiento', label: 'Vencimiento', sortable: true, hiddenForConsulta: true },
+
+  { key: 'status', label: 'Estado', sortable: true },
+];
 
 export default function InventoryTable({
   productos,
@@ -51,13 +73,19 @@ export default function InventoryTable({
   onPageChange,
   onItemsPerPageChange,
 }: InventoryTableProps) {
-
   const [sortKey, setSortKey] = useState<SortKey>('nombre');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const isAdmin = rol === 'admin';
+  const isConsultation = rol === 'consulta';
+  const visibleColumns = columns.filter((column) => !(isConsultation && column.hiddenForConsulta));
+  const tableColSpan = visibleColumns.length + (isConsultation ? 0 : 1) + (isAdmin ? 1 : 0);
 
   const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortKey(key); setSortDir('asc'); }
+    if (sortKey === key) setSortDir((direction) => (direction === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
   };
 
   const sorted = [...productos].sort((a, b) => {
@@ -79,17 +107,73 @@ export default function InventoryTable({
     </span>
   );
 
-  const cols: { key: SortKey; label: string; sortable?: boolean }[] = [
-    { key: 'sku', label: 'SKU', sortable: true },
-    { key: 'nombre', label: 'Medicamento', sortable: true },
-    { key: 'laboratorio', label: 'Laboratorio', sortable: true },
-    { key: 'categoria', label: 'Categoría', sortable: true },
-    { key: 'stockActual', label: 'Stock', sortable: true },
-    { key: 'precioCompra', label: 'P. Compra', sortable: true },
-    { key: 'precioVenta', label: 'P. Venta', sortable: true },
-    { key: 'fechaVencimiento', label: 'Vencimiento', sortable: true },
-    { key: 'status', label: 'Estado', sortable: true },
-  ];
+  const renderCell = (product: Producto, key: SortKey) => {
+    if (key === 'sku') {
+      return <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>;
+    }
+
+    if (key === 'nombre') {
+      return (
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-foreground max-w-[240px] truncate">{product.nombre}</span>
+            {product.controlado && <Shield size={12} className="text-warning flex-shrink-0" />}
+          </div>
+          <p className="text-xs text-muted-foreground">Lote: {product.lote}</p>
+        </div>
+      );
+    }
+
+    if (key === 'laboratorio') {
+      return <span className="text-muted-foreground">{product.laboratorio}</span>;
+    }
+
+    if (key === 'categoria') {
+      return <span className="text-xs text-muted-foreground">{product.categoria}</span>;
+    }
+
+    if (key === 'stockActual') {
+      return (
+        <div>
+          <div className="tabular-nums">
+            <span className={`font-semibold ${product.stockActual === 0 ? 'text-danger' : product.stockActual < product.stockMinimo ? 'text-warning' : 'text-foreground'}`}>
+              {product.stockActual}
+            </span>
+            <span className="text-xs text-muted-foreground"> / {product.stockMinimo} mín</span>
+          </div>
+          {product.stockActual < product.stockMinimo && product.stockActual > 0 && (
+            <div className="w-full bg-muted rounded-full h-1 mt-1">
+              <div
+                className="bg-warning rounded-full h-1"
+                style={{ width: `${Math.min(100, (product.stockActual / product.stockMinimo) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (key === 'precioCompra') {
+      return <span className="tabular-nums text-muted-foreground">{formatCurrency(product.precioCompra)}</span>;
+    }
+
+    if (key === 'precioVenta') {
+      return <span className="tabular-nums font-medium text-foreground">{formatCurrency(product.precioVenta)}</span>;
+    }
+
+    if (key === 'fechaVencimiento') {
+      return (
+        <span className={`text-xs tabular-nums ${
+          product.status === 'por-vencer' ? 'text-accent font-semibold' :
+          product.status === 'agotado' ? 'text-danger' : 'text-muted-foreground'
+        }`}>
+          {product.fechaVencimiento.split('-').reverse().join('/')}
+        </span>
+      );
+    }
+
+    return <Badge variant={product.status as BadgeVariant} label={statusLabel[product.status]} />;
+  };
 
   return (
     <div className="card overflow-hidden">
@@ -97,140 +181,83 @@ export default function InventoryTable({
         <table className="w-full min-w-[900px]">
           <thead>
             <tr>
-              <th className="table-header w-10">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={onSelectAll}
-                  className="w-4 h-4 rounded border-input text-primary focus:ring-ring"
-                  aria-label="Seleccionar todos"
-                />
-              </th>
-              {cols.map((col) => (
+              {!isConsultation && (
+                <th className="table-header w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={onSelectAll}
+                    className="w-4 h-4 rounded border-input text-primary focus:ring-ring"
+                    aria-label="Seleccionar todos"
+                  />
+                </th>
+              )}
+              {visibleColumns.map((column) => (
                 <th
-                  key={`th-${col.key}`}
-                  className={`table-header ${col.sortable ? 'cursor-pointer hover:bg-muted select-none' : ''}`}
-                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                  key={`th-${column.key}`}
+                  className={`table-header ${column.sortable ? 'cursor-pointer hover:bg-muted select-none' : ''}`}
+                  onClick={column.sortable ? () => handleSort(column.key) : undefined}
                 >
                   <span className="flex items-center">
-                    {col.label}
-                    {col.sortable && <SortIcon col={col.key} />}
+                    {column.label}
+                    {column.sortable && <SortIcon col={column.key} />}
                   </span>
                 </th>
               ))}
-              <th className="table-header text-right">Acciones</th>
+              {isAdmin && <th className="table-header text-right">Acciones</th>}
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={11}>
+                <td colSpan={tableColSpan}>
                   <EmptyState entity="producto" />
                 </td>
               </tr>
             ) : (
-              sorted.map((p) => (
+              sorted.map((product) => (
                 <tr
-                key={p.id}
-                  className={`group table-row ${selectedIds.has(p.id) ? 'bg-primary/5' : ''}`}
-                  >  
-                  <td className="table-cell w-10">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(p.id)}
-                      onChange={() => onToggleSelect(p.id)}
-                      className="w-4 h-4 rounded border-input text-primary focus:ring-ring"
-                      aria-label={`Seleccionar ${p.nombre}`}
-                    />
-                  </td>
-                  <td className="table-cell">
-                    <span className="font-mono text-xs text-muted-foreground">{p.sku}</span>
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground max-w-[200px] truncate">{p.nombre}</span>
-                      {p.controlado && (
-                        <Shield size={12} className="text-warning flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Lote: {p.lote}</p>
-                  </td>
-                  <td className="table-cell text-muted-foreground">{p.laboratorio}</td>
-                  <td className="table-cell text-muted-foreground text-xs">{p.categoria}</td>
-                  <td className="table-cell">
-                    <div className="tabular-nums">
-                      <span className={`font-semibold ${p.stockActual === 0 ? 'text-danger' : p.stockActual < p.stockMinimo ? 'text-warning' : 'text-foreground'}`}>
-                        {p.stockActual}
-                      </span>
-                      <span className="text-xs text-muted-foreground"> / {p.stockMinimo} mín</span>
-                    </div>
-                    {p.stockActual < p.stockMinimo && p.stockActual > 0 && (
-                      <div className="w-full bg-muted rounded-full h-1 mt-1">
-                        <div
-                          className="bg-warning rounded-full h-1"
-                          style={{ width: `${Math.min(100, (p.stockActual / p.stockMinimo) * 100)}%` }}
-                        />
+                  key={product.id}
+                  className={`group table-row ${selectedIds.has(product.id) ? 'bg-primary/5' : ''}`}
+                >
+                  {!isConsultation && (
+                    <td className="table-cell w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(product.id)}
+                        onChange={() => onToggleSelect(product.id)}
+                        className="w-4 h-4 rounded border-input text-primary focus:ring-ring"
+                        aria-label={`Seleccionar ${product.nombre}`}
+                      />
+                    </td>
+                  )}
+                  {visibleColumns.map((column) => (
+                    <td key={`${product.id}-${column.key}`} className="table-cell">
+                      {renderCell(product, column.key)}
+                    </td>
+                  ))}
+                  {isAdmin && (
+                    <td className="table-cell">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onEdit(product)}
+                          className="p-1.5 rounded-lg hover:bg-info/10 text-muted-foreground hover:text-info transition-colors"
+                          title={`Editar ${product.nombre}`}
+                          aria-label={`Editar ${product.nombre}`}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => onDelete(product)}
+                          className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors"
+                          title={`Eliminar ${product.nombre}`}
+                          aria-label={`Eliminar ${product.nombre}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                    )}
-                  </td>
-                  <td className="table-cell tabular-nums text-muted-foreground">
-                    ${p.precioCompra.toFixed(2)}
-                  </td>
-                  <td className="table-cell tabular-nums font-medium text-foreground">
-                    ${p.precioVenta.toFixed(2)}
-                  </td>
-                  <td className="table-cell">
-                    <span className={`text-xs tabular-nums ${
-                      p.status === 'por-vencer' ? 'text-accent font-semibold' :
-                      p.status === 'agotado' ? 'text-danger' : 'text-muted-foreground'
-                    }`}>
-                      {p.fechaVencimiento.split('-').reverse().join('/')}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <Badge variant={p.status as BadgeVariant} label={statusLabel[p.status]} />
-                  </td>
-                  <td className="table-cell">
-                    {rol === 'admin' && (
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => onEdit(p)}
-                        className="p-1.5 rounded-lg hover:bg-info/10 text-muted-foreground hover:text-info transition-colors"
-                        title={`Editar ${p.nombre}`}
-                        aria-label={`Editar ${p.nombre}`}
-                      >
-                        <Pencil size={14} />
-                      </button>
-
-                      <button
-                        onClick={() => onDelete(p)}
-                        className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors"
-                        title={`Eliminar ${p.nombre}`}
-                        aria-label={`Eliminar ${p.nombre}`}
-                      >
-                    <Trash2 size={14} />
-                      </button>
-                      </div>
-                    )}
-                    {/* Fallback always-visible actions for non-hover devices */}
-                    {rol === 'admin' && (
-                  <div className="flex items-center justify-end gap-1 sm:hidden">
-                    <button
-                      onClick={() => onEdit(p)}
-                      className="p-1.5 rounded-lg hover:bg-info/10 text-muted-foreground hover:text-info transition-colors"
-                      >
-                    <Pencil size={14} />
-                    </button>
-
-                    <button
-                      onClick={() => onDelete(p)}
-                      className="p-1.5 rounded-lg hover:bg-danger-bg text-muted-foreground hover:text-danger transition-colors"
-                      >
-                    <Trash2 size={14} />
-                    </button>
-                  </div>
-                )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -238,7 +265,6 @@ export default function InventoryTable({
         </table>
       </div>
 
-      {/* Pagination */}
       {totalItems > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border bg-muted/20">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -306,3 +332,4 @@ export default function InventoryTable({
     </div>
   );
 }
+

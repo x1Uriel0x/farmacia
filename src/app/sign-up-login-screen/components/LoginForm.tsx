@@ -62,15 +62,24 @@ export default function LoginForm() {
 
     setIsLoading(false);
 
-    window.location.href = '/';
+    const rol = String(result.usuario.rol).toLowerCase();
+
+    if (rol === 'consulta') {
+      window.location.href = '/inventory-management';
+    } else {
+      window.location.href = '/';
+    }
 
   } catch (error) {
 
     setIsLoading(false);
 
     toast.error('Error al conectar con el servidor');
+    
 
   }
+
+  
 };
   return (
     <div className="w-full max-w-md">

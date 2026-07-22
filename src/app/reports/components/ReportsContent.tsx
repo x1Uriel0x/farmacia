@@ -12,6 +12,7 @@ import {
   Search,
 } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
+import { formatCurrency } from '../../../lib/currency';
 
 type ReportType =
   | 'factura-detalle'
@@ -243,7 +244,7 @@ function formatDate(value: string): string {
 }
 
 function money(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function getYearOptions() {

@@ -10,6 +10,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { formatCurrency } from '../../lib/currency';
+import { getSessionUser } from '../../lib/session';
+import { buildSellerDailySales, buildSalesParams } from '../../lib/salesMetrics';
 import { normalizeVentasDiarias, type VentaDiaria } from './dashboardData';
 
 const chartColor = '#2563EB';
@@ -29,7 +32,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
     <div className="bg-card border border-border rounded-lg shadow-dropdown px-3 py-2">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-sm font-semibold text-foreground">
-        ${payload[0].value.toFixed(2)}
+        {formatCurrency(payload[0].value)}
       </p>
     </div>
   );
@@ -41,13 +44,16 @@ export default function SalesAreaChart() {
   useEffect(() => {
     const cargarVentas = async () => {
       try {
-        const response = await fetch(
-          'http://localhost/farmacia-api/ventas_diarias.php'
-        );
+        const user = getSessionUser();
+        const params = buildSalesParams(user);
+        const endpoint = user.rol === 'vendedor'
+          ? `http://localhost/farmacia-api/ventas_historial.php?${params.toString()}`
+          : 'http://localhost/farmacia-api/ventas_diarias.php';
+        const response = await fetch(endpoint);
 
         const datos = await response.json();
 
-        setData(normalizeVentasDiarias(datos));
+        setData(user.rol === 'vendedor' ? buildSellerDailySales(datos, user) : normalizeVentasDiarias(datos));
       } catch (error) {
         console.error('Error al cargar ventas diarias:', error);
       }

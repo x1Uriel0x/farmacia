@@ -13,7 +13,7 @@ export default function DashboardCharts() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="section-header">Ventas Diarias</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Últimos 7 días — en USD</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Últimos 7 días — en C$</p>
           </div>
         </div>
         <SalesAreaChart />

@@ -4,6 +4,7 @@ import React from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 import { type CartItem } from './salesData';
+import { formatCurrency } from '../../../lib/currency';
 
 interface CartPanelProps {
   items: CartItem[];
@@ -76,7 +77,7 @@ export default function CartPanel({ items, onUpdateItem, onRemoveItem }: CartPan
                       </div>
                     </td>
                     <td className="table-cell text-right tabular-nums text-muted-foreground text-sm">
-                      ${item.precioUnitario.toFixed(2)}
+                      {formatCurrency(item.precioUnitario)}
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center justify-center">
@@ -97,9 +98,9 @@ export default function CartPanel({ items, onUpdateItem, onRemoveItem }: CartPan
                     </td>
                     <td className="table-cell text-right">
                       <div>
-                        <p className="font-semibold text-foreground tabular-nums text-sm">${subtotal.toFixed(2)}</p>
+                        <p className="font-semibold text-foreground tabular-nums text-sm">{formatCurrency(subtotal)}</p>
                         {item.descuento > 0 && (
-                          <p className="text-xs text-danger tabular-nums">-${discountAmount.toFixed(2)}</p>
+                          <p className="text-xs text-danger tabular-nums">-{formatCurrency(discountAmount)}</p>
                         )}
                       </div>
                     </td>

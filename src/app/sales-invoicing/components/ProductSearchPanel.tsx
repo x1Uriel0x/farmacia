@@ -1,31 +1,42 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Plus, AlertTriangle, Package } from 'lucide-react';
 import { type CartItem, type ProductoCatalogo } from './salesData';
+import { formatCurrency } from '../../../lib/currency';
 
 interface ProductSearchPanelProps {
   onAddToCart: (item: Omit<CartItem, 'id'>) => void;
   cartItems: CartItem[];
 }
 
+type ProductoApi = {
+  id: string | number;
+  sku: string;
+  nombre: string;
+  laboratorio: string;
+  categoria: string;
+  precioVenta?: number | string;
+  precio_venta?: number | string;
+  stockActual?: number | string;
+  stock_actual?: number | string;
+  status: string;
+};
+
 export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [catalogoProductos, setCatalogoProductos] = useState<ProductoCatalogo[]>([]);
-  const [results, setResults] = useState<ProductoCatalogo[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const results = useMemo(() => {
     if (query.trim().length < 2) {
-      setResults([]);
-      setShowDropdown(false);
-      return;
+      return [];
     }
     const q = query.toLowerCase();
-    const filtered = catalogoProductos.filter(
+    return catalogoProductos.filter(
       (p) =>
         p.status !== 'agotado' &&
         (p.nombre.toLowerCase().includes(q) ||
@@ -33,9 +44,6 @@ export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSe
           p.laboratorio.toLowerCase().includes(q) ||
           p.categoria.toLowerCase().includes(q))
     );
-    setResults(filtered);
-    setShowDropdown(true);
-
   }, [query, catalogoProductos]);
 
   useEffect(() => {
@@ -73,36 +81,35 @@ export default function ProductSearchPanel({ onAddToCart, cartItems }: ProductSe
 
 const cartProductIds = new Set(cartItems.map((c) => c.productoId));
 
-const cargarProductos = async () => {
-  try {
-    const response = await fetch(
-      'http://localhost/farmacia-api/productos.php'
-    );
-
-    const data = await response.json();
-
-    const productosFormateados = data.map((p: any) => ({
-      id: String(p.id),
-      sku: p.sku,
-      nombre: p.nombre,
-      laboratorio: p.laboratorio,
-      categoria: p.categoria,
-      precioVenta: Number(p.precioVenta),
-      stockActual: Number(p.stockActual),
-      status: p.status,
-    }));
-
-    console.log('PRODUCTOS CARGADOS:', productosFormateados);
-
-    setCatalogoProductos(productosFormateados);
-
-  } catch (error) {
-    console.error('ERROR:', error);
-  }
-};
-
 useEffect(() => {
-  cargarProductos();
+  const cargarProductos = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost/farmacia-api/productos.php'
+      );
+
+      const data = await response.json() as ProductoApi[];
+
+      const productosFormateados = data.map((p) => ({
+        id: String(p.id),
+        sku: p.sku,
+        nombre: p.nombre,
+        laboratorio: p.laboratorio,
+        categoria: p.categoria,
+        precioVenta: Number(p.precioVenta ?? p.precio_venta),
+        stockActual: Number(p.stockActual ?? p.stock_actual),
+        status: p.status,
+      }));
+
+      console.log('PRODUCTOS CARGADOS:', productosFormateados);
+
+      setCatalogoProductos(productosFormateados);
+    } catch (error) {
+      console.error('ERROR:', error);
+    }
+  };
+
+  void cargarProductos();
 }, []);
   return (
     <div className="card p-5">
@@ -119,7 +126,11 @@ useEffect(() => {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setQuery(value);
+              setShowDropdown(value.trim().length >= 2);
+            }}
             onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
             placeholder="Buscar por nombre, SKU, laboratorio..."
             className="input-field pl-9"
@@ -165,7 +176,7 @@ useEffect(() => {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-sm font-semibold text-foreground tabular-nums">
-                        ${product.precioVenta.toFixed(2)}
+                        {formatCurrency(product.precioVenta)}
                       </span>
                       <input
                         type="number"
@@ -221,7 +232,7 @@ useEffect(() => {
               >
                 <p className="text-xs font-medium text-foreground leading-tight truncate">{product.nombre}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs tabular-nums font-semibold text-primary">${product.precioVenta.toFixed(2)}</span>
+                  <span className="text-xs tabular-nums font-semibold text-primary">{formatCurrency(product.precioVenta)}</span>
                   {inCart && <span className="text-xs text-primary">✓</span>}
                   {unavailable && <span className="text-xs text-danger">Agotado</span>}
                 </div>

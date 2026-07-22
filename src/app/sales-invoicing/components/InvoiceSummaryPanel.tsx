@@ -4,6 +4,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Loader2, CreditCard, Banknote, ArrowLeftRight } from 'lucide-react';
 import { type ClienteInfo, type FormaPago, IVA_RATE } from './salesData';
+import { formatCurrency } from '../../../lib/currency';
 
 interface InvoiceSummaryPanelProps {
   cliente: ClienteInfo;
@@ -191,25 +192,25 @@ export default function InvoiceSummaryPanel({
         <div className="space-y-2.5 text-sm">
           <div className="flex justify-between text-muted-foreground">
             <span>Subtotal bruto</span>
-            <span className="tabular-nums">${subtotalBruto.toFixed(2)}</span>
+            <span className="tabular-nums">{formatCurrency(subtotalBruto)}</span>
           </div>
           {descuentoGlobalAmount > 0 && (
             <div className="flex justify-between text-danger">
               <span>Descuento ({descuentoGlobal}%)</span>
-              <span className="tabular-nums">-${descuentoGlobalAmount.toFixed(2)}</span>
+              <span className="tabular-nums">-{formatCurrency(descuentoGlobalAmount)}</span>
             </div>
           )}
           <div className="flex justify-between text-muted-foreground">
             <span>Subtotal neto</span>
-            <span className="tabular-nums">${subtotalNeto.toFixed(2)}</span>
+            <span className="tabular-nums">{formatCurrency(subtotalNeto)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
             <span>IVA ({(IVA_RATE * 100).toFixed(0)}%)</span>
-            <span className="tabular-nums">${ivaAmount.toFixed(2)}</span>
+            <span className="tabular-nums">{formatCurrency(ivaAmount)}</span>
           </div>
           <div className="flex justify-between text-foreground font-bold text-lg pt-2 border-t border-border">
             <span>TOTAL</span>
-            <span className="tabular-nums text-primary">${total.toFixed(2)}</span>
+            <span className="tabular-nums text-primary">{formatCurrency(total)}</span>
           </div>
         </div>
 

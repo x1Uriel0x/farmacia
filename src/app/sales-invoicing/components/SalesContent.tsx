@@ -8,6 +8,9 @@ import InvoiceSummaryPanel from './InvoiceSummaryPanel';
 import InvoicePreviewModal from './InvoicePreviewModal';
 import { type CartItem, type ClienteInfo, type FormaPago, IVA_RATE } from './salesData';
 
+
+import { formatCurrency } from '../../../lib/currency';
+
 let invoiceCounter = 893;
 
 function generateInvoiceNumber(): string {
@@ -140,7 +143,7 @@ export default function SalesContent() {
   const ivaAmount = subtotalNeto * IVA_RATE;
   const total = subtotalNeto + ivaAmount;
 
-  // Backend integration point: POST /api/ventas — create sale + invoice, update stock
+  // Backend integracios ventas — crear venta + invoice, update stock
   const handleEmitirFactura = async () => {
   if (cart.length === 0) {
     toast.error('El carrito está vacío — agrega productos antes de emitir la factura');

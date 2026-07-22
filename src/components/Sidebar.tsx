@@ -99,6 +99,8 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
   const pathname = usePathname();
   const router = useRouter();
 
+  
+
   useEffect(() => {
     queueMicrotask(() => {
       const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
@@ -108,10 +110,15 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
   }, []);
 
   const visibleNavItems = navItems.filter((item) => {
-    if (item.roles && !item.roles.includes(rol)) return false;
-    if (rol === 'consulta' && item.href === '/sales-invoicing') return false;
-    return true;
-  });
+
+  if (item.roles && !item.roles.includes(rol)) {
+    return false;
+  }
+  if (rol === 'consulta') {
+    return item.href === '/inventory-management';
+  }
+  return true;
+});
 
   const groups = [
     { key: 'principal', label: 'Principal' },

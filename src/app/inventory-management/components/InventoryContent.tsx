@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, AlertTriangle, Clock, Boxes, Building2, Tags } from 'lucide-react';
 import { toast } from 'sonner';
 import { categorias, type Producto } from './inventoryData';
 import InventoryTable from './InventoryTable';
@@ -134,6 +134,9 @@ export default function InventoryContent() {
   const bajoStock = productosList.filter((p) => p.status === 'bajo-stock').length;
   const porVencer = productosList.filter((p) => p.status === 'por-vencer').length;
   const agotados = productosList.filter((p) => p.status === 'agotado').length;
+  const isConsultation = rol === 'consulta';
+  const categoriasCount = new Set(productosList.map((p) => p.categoria).filter(Boolean)).size;
+  const laboratoriosCount = new Set(productosList.map((p) => p.laboratorio).filter(Boolean)).size;
 
 const cargarProductos = async () => {
   try {
@@ -193,6 +196,10 @@ const cargarProductos = async () => {
 
   const filtered = useMemo(() => {
     return productosList.filter((p) => {
+
+      if (isConsultation && p.status !== "disponible") {
+         return false;}
+
       const matchSearch =
         search === '' ||
         p.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -201,11 +208,12 @@ const cargarProductos = async () => {
       const matchCategoria = selectedCategoria === 'Todas' || p.categoria === selectedCategoria;
       const isExpired = new Date(`${p.fechaVencimiento}T00:00:00`) < new Date(new Date().toDateString());
       const matchStatus =
+        isConsultation ||
         selectedStatus === 'Todos' ||
         (selectedStatus === 'vencidos' ? isExpired : p.status === selectedStatus);
       return matchSearch && matchCategoria && matchStatus;
     });
-  }, [productosList, search, selectedCategoria, selectedStatus]);
+  }, [productosList, search, selectedCategoria, selectedStatus, isConsultation]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -383,40 +391,47 @@ console.log("ROL EN EL COMPONENTE:", rol);
         )}
       </div>
 
-      {/* Alerts de aviso */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {bajoStock > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-bg border border-warning/30">
-            <AlertTriangle size={16} className="text-warning flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-warning">{bajoStock} Bajo Stock</p>
-              <p className="text-xs text-warning/80">Requieren reorden urgente</p>
+      {isConsultation ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <CatalogStat icon={<Boxes size={18} />} label="Medicamentos" value={String(productosList.length)} />
+          <CatalogStat icon={<Tags size={18} />} label="Categorías" value={String(categoriasCount)} />
+          <CatalogStat icon={<Building2 size={18} />} label="Laboratorios" value={String(laboratoriosCount)} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {bajoStock > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-bg border border-warning/30">
+              <AlertTriangle size={16} className="text-warning flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-warning">{bajoStock} Bajo Stock</p>
+                <p className="text-xs text-warning/80">Requieren reorden urgente</p>
+              </div>
             </div>
-          </div>
-        )}
-        {porVencer > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/10 border border-accent/30">
-            <Clock size={16} className="text-accent flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-accent">{porVencer} Por Vencer</p>
-              <p className="text-xs text-accent/80">Vencen en menos de 30 días</p>
+          )}
+          {porVencer > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/10 border border-accent/30">
+              <Clock size={16} className="text-accent flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-accent">{porVencer} Por Vencer</p>
+                <p className="text-xs text-accent/80">Vencen en menos de 30 días</p>
+              </div>
             </div>
-          </div>
-        )}
-        {agotados > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-danger-bg border border-danger/30">
-            <AlertTriangle size={16} className="text-danger flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-danger">{agotados} Agotados</p>
-              <p className="text-xs text-danger/80">Sin stock disponible</p>
+          )}
+          {agotados > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-danger-bg border border-danger/30">
+              <AlertTriangle size={16} className="text-danger flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-danger">{agotados} Agotados</p>
+                <p className="text-xs text-danger/80">Sin stock disponible</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Filtrar */}
       <div className="card p-4">
-        {selectedStatus !== 'Todos' && (
+        {!isConsultation && selectedStatus !== 'Todos' && (
           <div className="mb-3 flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-medium text-primary">
               Mostrando {alertFilterLabels[selectedStatus] ?? statusLabels[selectedStatus].toLowerCase()}
@@ -453,22 +468,24 @@ console.log("ROL EN EL COMPONENTE:", rol);
               <option key={`cat-opt-${c}`} value={c}>{c}</option>
             ))}
           </select>
-          <select
-            value={selectedStatus}
-            onChange={(e) => applyStatusFilter(e.target.value)}
-            className="input-field sm:w-44"
-          >
-            {statusOptions.map((s) => (
-              <option key={`status-opt-${s}`} value={s}>
-                {statusLabels[s]}
-              </option>
-            ))}
-          </select>
+          {!isConsultation && (
+            <select
+              value={selectedStatus}
+              onChange={(e) => applyStatusFilter(e.target.value)}
+              className="input-field sm:w-44"
+            >
+              {statusOptions.map((s) => (
+                <option key={`status-opt-${s}`} value={s}>
+                  {statusLabels[s]}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
       {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
+      {!isConsultation && selectedIds.size > 0 && (
         <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border border-primary/20 rounded-lg slide-up">
           <span className="text-sm font-medium text-primary">
             {selectedIds.size} producto(s) seleccionado(s)
@@ -520,3 +537,24 @@ console.log("ROL EN EL COMPONENTE:", rol);
   );
 }
 
+function CatalogStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="card flex items-center gap-3 p-4">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
+        <p className="text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      </div>
+    </div>
+  );
+}

@@ -1,13 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AppLayout from '../components/AppLayout';
 import DashboardMetrics from './components/DashboardMetrics';
 import DashboardAlerts from './components/DashboardAlerts';
 import DashboardCharts from './components/DashboardCharts';
 import DashboardActivity from './components/DashboardActivity';
+import { getSessionUser } from '../lib/session';
 
 export default function DashboardPage() {
+  const [isConsultation, setIsConsultation] = useState(false);
+
+  useEffect(() => {
+    setIsConsultation(getSessionUser().rol === 'consulta');
+  }, []);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -27,8 +34,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Alerts */}
-        <DashboardAlerts />
+        {!isConsultation && <DashboardAlerts />}
 
         {/* KPI metrics */}
         <DashboardMetrics />

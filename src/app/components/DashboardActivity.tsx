@@ -1,4 +1,6 @@
 'use client';
+import { formatCurrency } from '../../lib/currency';
+
 import Badge from '../../components/ui/Badge';
 import React, { useEffect, useState } from 'react';
 import {ShoppingCart,

@@ -27,6 +27,11 @@ interface ProductModalProps {
   onSave: (data: ProductFormData) => Promise<void>;
 }
 
+type CatalogOption = {
+  id: string | number;
+  nombre: string;
+};
+
 export default function ProductModal({ open, onClose, product, onSave }: ProductModalProps) {
   const {
     register,
@@ -124,8 +129,8 @@ useEffect(() => {
 
   const precioCompra = watch('precioCompra');
   const margen = precioCompra > 0 ? watch('precioVenta') / precioCompra : 0;
-  const [categoriasBD, setCategoriasBD] = React.useState<any[]>([]);
-  const [laboratoriosBD, setLaboratoriosBD] = React.useState<any[]>([]);
+  const [categoriasBD, setCategoriasBD] = React.useState<CatalogOption[]>([]);
+  const [laboratoriosBD, setLaboratoriosBD] = React.useState<CatalogOption[]>([]);
   // Backend integration point: POST /api/productos or PUT /api/productos/:id
   const onSubmit = async (data: ProductFormData) => {
     await onSave(data);
@@ -356,31 +361,31 @@ useEffect(() => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="precioCompra" className="label-text">Precio de Compra (USD)</label>
+              <label htmlFor="precioCompra" className="label-text">Precio de Compra</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">C$</span>
                 <input
                   id="precioCompra"
                   type="number"
                   step="0.01"
                   min="0"
                   className={`input-field pl-7 ${errors.precioCompra ? 'border-danger' : ''}`}
-                  {...register('precioCompra', { required: true, valueAsNumber: true, min: { value: 0.01, message: 'Debe ser mayor a $0' } })}
+                  {...register('precioCompra', { required: true, valueAsNumber: true, min: { value: 0.01, message: 'Debe ser mayor a 0' } })}
                 />
               </div>
               {errors.precioCompra && <p className="error-text">{errors.precioCompra.message ?? 'Requerido'}</p>}
             </div>
             <div>
-              <label htmlFor="precioVenta" className="label-text">Precio de Venta (USD)</label>
+              <label htmlFor="precioVenta" className="label-text">Precio de Venta</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">C$</span>
                 <input
                   id="precioVenta"
                   type="number"
                   step="0.01"
                   min="0"
                   className={`input-field pl-7 ${errors.precioVenta ? 'border-danger' : ''}`}
-                  {...register('precioVenta', { required: true, valueAsNumber: true, min: { value: 0.01, message: 'Debe ser mayor a $0' } })}
+                  {...register('precioVenta', { required: true, valueAsNumber: true, min: { value: 0.01, message: 'Debe ser mayor a 0' } })}
                 />
               </div>
               {errors.precioVenta && <p className="error-text">{errors.precioVenta.message ?? 'Requerido'}</p>}

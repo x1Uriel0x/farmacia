@@ -5,6 +5,7 @@ import { Printer, Download, X, CheckCircle } from 'lucide-react';
 import { type CartItem, type ClienteInfo, type FormaPago, IVA_RATE } from './salesData';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatCurrency } from '../../../lib/currency';
 
 type JsPdfWithAutoTable = jsPDF & {
   lastAutoTable: {
@@ -53,7 +54,7 @@ function formatDate(date: Date): string {
 }
 
 function money(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function escapeHtml(value: string): string {
@@ -141,9 +142,9 @@ export default function InvoicePreviewModal({
             <div class="center">
               <div class="brand">PharmaControl</div>
               <div>Farmacia Central</div>
-              <div>RUC: 1790012345001</div>
-              <div>Av. Amazonas N24-03, Quito</div>
-              <div>Tel: (02) 234-5678</div>
+              <div>RUC: J1310000252297</div>
+              <div>Col.Evert Mendoza, Frente Cancha deportiva</div>
+              <div>Tel: (+505) 2344-0000</div>
             </div>
 
             <div class="line"></div>
@@ -202,32 +203,6 @@ export default function InvoicePreviewModal({
     win.document.close();
     return;
 
-    /*
-    if (!printRef.current) return;
-    const content = printRef.current.innerHTML;
-    const win = window.open('', '_blank', 'width=800,height=700');
-    if (!win) return;
-    win.document.write(`
-      <html>
-        <head>
-          <title>Factura ${invoiceNumber} — PharmaControl</title>
-          <style>
-            body { font-family: Arial, sans-serif; font-size: 13px; color: #0f172a; margin: 24px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-            th { font-weight: 600; background: #f8fafc; }
-            .text-right { text-align: right; }
-            .text-center { text-align: center; }
-            .font-bold { font-weight: 700; }
-            .total-row { font-size: 16px; font-weight: 700; border-top: 2px solid #0d9488; }
-          </style>
-        </head>
-        <body>${content}</body>
-      </html>
-    `);
-    win.document.close();
-    win.print();
-    */
   };
 const handleDownloadPDF = () => {
 
@@ -287,11 +262,11 @@ const handleDownloadPDF = () => {
 
         item.cantidad,
 
-        `$${item.precioUnitario.toFixed(2)}`,
+        formatCurrency(item.precioUnitario),
 
         `${item.descuento}%`,
 
-        `$${(totalLinea - descuento).toFixed(2)}`
+        formatCurrency(totalLinea - descuento)
 
       ];
 
@@ -302,7 +277,7 @@ const handleDownloadPDF = () => {
   let y = (doc as JsPdfWithAutoTable).lastAutoTable.finalY + 12;
 
   doc.text(
-    `Subtotal: $${subtotalBruto.toFixed(2)}`,
+    `Subtotal: ${formatCurrency(subtotalBruto)}`,
     140,
     y
   );
@@ -312,7 +287,7 @@ const handleDownloadPDF = () => {
   if (descuentoGlobalAmount > 0) {
 
     doc.text(
-      `Descuento: -$${descuentoGlobalAmount.toFixed(2)}`,
+      `Descuento: -${formatCurrency(descuentoGlobalAmount)}`,
       140,
       y
     );
@@ -322,7 +297,7 @@ const handleDownloadPDF = () => {
   }
 
   doc.text(
-    `IVA: $${ivaAmount.toFixed(2)}`,
+    `IVA: ${formatCurrency(ivaAmount)}`,
     140,
     y
   );
@@ -332,7 +307,7 @@ const handleDownloadPDF = () => {
   doc.setFontSize(13);
 
   doc.text(
-    `TOTAL: $${total.toFixed(2)}`,
+    `TOTAL: ${formatCurrency(total)}`,
     140,
     y
   );
@@ -411,9 +386,9 @@ const handleDownloadPDF = () => {
                   <span className="font-bold text-foreground text-lg">PharmaControl</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Farmacia Central</p>
-                <p className="text-xs text-muted-foreground">RUC: 1790012345001</p>
-                <p className="text-xs text-muted-foreground">Av. Amazonas N24-03, Quito</p>
-                <p className="text-xs text-muted-foreground">Tel: (02) 234-5678</p>
+                <p className="text-xs text-muted-foreground">RUC: J1310000252297</p>
+                <p className="text-xs text-muted-foreground">col. evert mendoza, frente ala cancha</p>
+                <p className="text-xs text-muted-foreground">Tel: (+505) 2344-0000</p>
               </div>
               <div className="text-right">
                 <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
@@ -483,13 +458,13 @@ const handleDownloadPDF = () => {
                         {item.cantidad}
                       </td>
                       <td className="py-2.5 px-3 text-right tabular-nums text-muted-foreground">
-                        ${item.precioUnitario.toFixed(2)}
+                        {formatCurrency(item.precioUnitario)}
                       </td>
                       <td className="py-2.5 px-3 text-center tabular-nums text-muted-foreground">
                         {item.descuento > 0 ? `${item.descuento}%` : '—'}
                       </td>
                       <td className="py-2.5 text-right tabular-nums font-medium text-foreground">
-                        ${sub.toFixed(2)}
+                        {formatCurrency(sub)}
                       </td>
                     </tr>
                   );
@@ -502,25 +477,25 @@ const handleDownloadPDF = () => {
               <div className="w-64 space-y-1.5 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal bruto</span>
-                  <span className="tabular-nums">${subtotalBruto.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatCurrency(subtotalBruto)}</span>
                 </div>
                 {descuentoGlobalAmount > 0 && (
                   <div className="flex justify-between text-danger">
                     <span>Descuento</span>
-                    <span className="tabular-nums">-${descuentoGlobalAmount.toFixed(2)}</span>
+                    <span className="tabular-nums">-{formatCurrency(descuentoGlobalAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal neto</span>
-                  <span className="tabular-nums">${subtotalNeto.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatCurrency(subtotalNeto)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>IVA ({(IVA_RATE * 100).toFixed(0)}%)</span>
-                  <span className="tabular-nums">${ivaAmount.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatCurrency(ivaAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg text-foreground border-t-2 border-primary pt-2 mt-2">
                   <span>TOTAL</span>
-                  <span className="tabular-nums text-primary">${total.toFixed(2)}</span>
+                  <span className="tabular-nums text-primary">{formatCurrency(total)}</span>
                 </div>
               </div>
             </div>

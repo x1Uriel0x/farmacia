@@ -43,4 +43,4 @@ export interface ClienteInfo {
   telefono: string;
 }
 
-export const IVA_RATE = 0.12;
+export const IVA_RATE = 0.15;
